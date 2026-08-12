@@ -13,17 +13,67 @@ class InvoiceController extends Controller
 {
     public function index()
     {
+        $currentMonth = request('month', now()->month);
+        $currentYear = request('year', now()->year);
+        $statusFilter = request('status');
+        $serviceFilter = request('service');
+        $search = request('search');
+
         $children = Child::with(['therapyTypes', 'vocationalTypes', 'invoicePayments'])->orderBy('name')->get();
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+
+        // Apply filters
+        if ($search) {
+            $children = $children->filter(function ($child) use ($search) {
+                return stripos($child->name, $search) !== false ||
+                       stripos($child->parent_name ?? '', $search) !== false;
+            });
+        }
+
+        if ($serviceFilter) {
+            $children = $children->filter(function ($child) use ($serviceFilter) {
+                $services = [];
+                foreach ($child->therapyTypes as $t) $services[] = $t->name;
+                foreach ($child->vocationalTypes as $v) $services[] = $v->name;
+                if ($child->isTakingSekolah()) $services[] = 'Sekolah';
+                return in_array($serviceFilter, $services);
+            });
+        }
+
+        // Calculate status and totals for filtered children
+        $totalPaid = 0;
+        $totalUnpaid = 0;
 
         foreach ($children as $child) {
             $child->payment_status = $this->getPaymentStatus($child, $currentMonth, $currentYear);
             $child->unpaid_months = $this->getUnpaidMonths($child);
             $child->invoice_amount = $child->calculateInvoiceAmount($currentMonth, $currentYear);
+
+            if ($child->payment_status === 'paid') {
+                $totalPaid += $child->invoice_amount;
+            } else {
+                $totalUnpaid += $child->invoice_amount;
+            }
         }
 
-        return view('invoices.index', compact('children', 'currentMonth', 'currentYear'));
+        // Apply status filter after calculation
+        if ($statusFilter) {
+            $children = $children->filter(function ($child) use ($statusFilter) {
+                return $statusFilter === 'paid' ? $child->payment_status === 'paid' : $child->payment_status === 'unpaid';
+            });
+        }
+
+        // Get all unique services for filter dropdown
+        $allServices = [];
+        $allChildren = Child::with(['therapyTypes', 'vocationalTypes'])->get();
+        foreach ($allChildren as $c) {
+            foreach ($c->therapyTypes as $t) $allServices[] = $t->name;
+            foreach ($c->vocationalTypes as $v) $allServices[] = $v->name;
+            if ($c->isTakingSekolah()) $allServices[] = 'Sekolah';
+        }
+        $allServices = array_unique($allServices);
+        sort($allServices);
+
+        return view('invoices.index', compact('children', 'currentMonth', 'currentYear', 'totalPaid', 'totalUnpaid', 'allServices'));
     }
 
     public function generate(Request $request, Child $child)
@@ -152,13 +202,13 @@ class InvoiceController extends Controller
             ->where('year', $year)
             ->first();
 
-        if ($payment && $payment->is_paid) {
-            return 'paid';
+        if ($payment) {
+            return $payment->is_paid ? 'paid' : 'unpaid';
         }
 
         $invoiceAmount = $child->calculateInvoiceAmount($month, $year);
         if ($invoiceAmount <= 0) {
-            return 'paid'; // No invoice to pay
+            return 'paid';
         }
 
         $totalIncome = $child->incomes()
@@ -166,11 +216,7 @@ class InvoiceController extends Controller
             ->whereYear('date', $year)
             ->sum('amount');
 
-        if ($totalIncome >= $invoiceAmount) {
-            return 'paid';
-        }
-
-        return 'unpaid';
+        return $totalIncome >= $invoiceAmount ? 'paid' : 'unpaid';
     }
 
     private function getUnpaidMonths(Child $child): array
