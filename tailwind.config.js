@@ -1,0 +1,38 @@
+import defaultTheme from 'tailwindcss/defaultTheme';
+import forms from '@tailwindcss/forms';
+
+/** @type {import('tailwindcss').Config} */
+export default {
+    content: [
+        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+        './storage/framework/views/*.php',
+        './resources/views/**/*.blade.php',
+    ],
+
+    theme: {
+        extend: {
+            fontFamily: {
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                glass: {
+                    white: 'rgba(255, 255, 255, 0.15)',
+                    light: 'rgba(255, 255, 255, 0.25)',
+                    border: 'rgba(255, 255, 255, 0.3)',
+                    borderStrong: 'rgba(255, 255, 255, 0.4)',
+                },
+            },
+            backdropBlur: {
+                xs: '2px',
+            },
+            boxShadow: {
+                'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                'glass-inner': 'inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                'glass-soft': '0 4px 20px rgba(0, 0, 0, 0.08)',
+                'glow': '0 0 40px rgba(100, 150, 255, 0.25)',
+            },
+        },
+    },
+
+    plugins: [forms],
+};

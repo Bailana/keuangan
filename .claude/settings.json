@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://127.0.0.1:8000/expenses/ocr -F image=@d:/finance_AM/storage/app/public/ocr-temp/wI5x5jlKsA11VivjIBxC5GLo8D5fvtyVNmOv4Mjg.jpg)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/expenses/ocr -H 'X-CSRF-TOKEN: test123' -F image=@d:/finance_AM/storage/app/public/ocr-temp/wI5x5jlKsA11VivjIBxC5GLo8D5fvtyVNmOv4Mjg.jpg)",
+      "Bash(curl -s http://127.0.0.1:8000/expenses/index)",
+      "Bash(cd d:/finance_AM && cat /tmp/login_resp.html | grep -i 'token\\\\|csrf' | head -5)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

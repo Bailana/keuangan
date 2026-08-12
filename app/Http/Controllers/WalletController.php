@@ -1,0 +1,215 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Wallet;
+use App\Models\WalletBalance;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class WalletController extends Controller
+{
+    public function index()
+    {
+        $wallets = Wallet::with('walletBalances')
+            ->select(['id', 'name', 'slug', 'is_default', 'initial_balance', 'owner_name', 'account_number'])
+            ->get()
+            ->map(function ($wallet) {
+                $wallet->current_balance = $wallet->getCurrentBalance();
+                $wallet->month_start = $wallet->walletBalances()
+                    ->where('month', '>=', now()->startOfMonth())
+                    ->latest()
+                    ->first();
+                return $wallet;
+            });
+
+        return view('wallets.index', compact('wallets'));
+    }
+
+    public function create()
+    {
+        return view('wallets.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100|unique:wallets,name',
+            'owner_name' => 'required|string|max:100',
+            'account_number' => 'required|string|max:50',
+        ]);
+
+        $wallet = Wallet::create($request->only(['name', 'owner_name', 'account_number']));
+
+        return redirect()->route('wallets.index')->with('success', 'Dompet berhasil ditambahkan.');
+    }
+
+    public function edit(Wallet $wallet)
+    {
+        return view('wallets.edit', compact('wallet'));
+    }
+
+    public function update(Request $request, Wallet $wallet)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100|unique:wallets,name,' . $wallet->id,
+            'owner_name' => 'required|string|max:100',
+            'account_number' => 'required|string|max:50',
+        ]);
+
+        $wallet->update($request->only(['name', 'owner_name', 'account_number']));
+
+        return redirect()->route('wallets.index')->with('success', 'Dompet berhasil diperbarui.');
+    }
+
+    public function destroy(Wallet $wallet)
+    {
+        if ($wallet->expenses()->count() > 0 || $wallet->incomes()->count() > 0) {
+            return redirect()->route('wallets.index')->with('error', 'Dompet memiliki transaksi dan tidak dapat dihapus.');
+        }
+
+        $wallet->delete();
+        return redirect()->route('wallets.index')->with('success', 'Dompet berhasil dihapus.');
+    }
+
+    public function setDefault(Request $request, Wallet $wallet)
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
+        Wallet::where('is_default', true)->update(['is_default' => false]);
+        $wallet->update(['is_default' => true]);
+
+        return back()->with('success', $wallet->name . ' ditetapkan sebagai dompet default.');
+    }
+
+    public function setInitialBalance(Request $request, Wallet $wallet)
+    {
+        $request->validate([
+            'balance' => 'required|numeric|min:0',
+        ]);
+
+        $wallet->initial_balance = $request->balance;
+        $wallet->save();
+
+        $balance = new WalletBalance();
+        $balance->wallet_id = $wallet->id;
+        $balance->balance = $request->balance;
+        $balance->month = now()->startOfMonth();
+        $balance->note = 'Saldo awal';
+        $balance->save();
+
+        return back()->with('success', 'Saldo awal berhasil disimpan.');
+    }
+
+    public function downloadStatement(Request $request)
+    {
+        $request->validate([
+            'wallet_slug' => 'required|exists:wallets,slug',
+            'month' => 'required|date_format:Y-m',
+        ]);
+
+        $wallet = Wallet::where('slug', $request->wallet_slug)->firstOrFail();
+        $month = Carbon::parse($request->month);
+
+        // Expense records for this wallet
+        $records = DB::table('expenses')
+            ->select(
+                'expenses.date',
+                'expenses.title',
+                'expenses.amount',
+                'expenses.expense_category_id',
+                'expense_categories.name as category_name'
+            )
+            ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
+            ->where('expenses.wallet_id', $wallet->id)
+            ->whereYear('expenses.date', $month->year)
+            ->whereMonth('expenses.date', $month->month)
+            ->orderBy('expenses.date')
+            ->get();
+
+        // Income records for this wallet
+        $incomeRecords = DB::table('incomes')
+            ->select(
+                'incomes.date',
+                'incomes.amount',
+                'incomes.sender_name',
+                'income_categories.name as category_name'
+            )
+            ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')
+            ->where('incomes.wallet_id', $wallet->id)
+            ->whereYear('incomes.date', $month->year)
+            ->whereMonth('incomes.date', $month->month)
+            ->orderBy('incomes.date')
+            ->get();
+
+        $income = $incomeRecords->sum('amount');
+        $expense = $records->sum('amount');
+
+        // Calculate balance: last known balance + income - expense
+        $prevBalance = WalletBalance::where('wallet_id', $wallet->id)
+            ->where('month', '<', $month->startOfMonth())
+            ->max('balance');
+        $currentBalance = ($prevBalance ?? 0) + $income - $expense;
+
+        return view('wallets.statement', compact(
+            'wallet', 'records', 'incomeRecords', 'income', 'expense', 'currentBalance', 'month'
+        ));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->validate([
+            'wallet_slug' => 'required|exists:wallets,slug',
+            'month' => 'required|date_format:Y-m',
+        ]);
+
+        $wallet = Wallet::where('slug', $request->wallet_slug)->firstOrFail();
+        $month = Carbon::parse($request->month);
+
+        $records = DB::table('expenses')
+            ->select(
+                'expenses.date',
+                'expenses.title',
+                'expenses.amount',
+                'expense_categories.name as category_name'
+            )
+            ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
+            ->where('expenses.wallet_id', $wallet->id)
+            ->whereYear('expenses.date', $month->year)
+            ->whereMonth('expenses.date', $month->month)
+            ->orderBy('expenses.date')
+            ->get();
+
+        $incomeRecords = DB::table('incomes')
+            ->select(
+                'incomes.date',
+                'incomes.amount',
+                'incomes.sender_name',
+                'income_categories.name as category_name'
+            )
+            ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')
+            ->where('incomes.wallet_id', $wallet->id)
+            ->whereYear('incomes.date', $month->year)
+            ->whereMonth('incomes.date', $month->month)
+            ->orderBy('incomes.date')
+            ->get();
+
+        $income = $incomeRecords->sum('amount');
+        $expense = $records->sum('amount');
+
+        $prevBalance = WalletBalance::where('wallet_id', $wallet->id)
+            ->where('month', '<', $month->startOfMonth())
+            ->max('balance');
+        $currentBalance = ($prevBalance ?? 0) + $income - $expense;
+
+        $pdf = Pdf::loadView('wallets.pdf-export', compact(
+            'wallet', 'records', 'incomeRecords', 'income', 'expense', 'currentBalance', 'month'
+        ));
+
+        return $pdf->download('E-Statement-' . $wallet->name . '-' . $month->format('F-Y') . '.pdf');
+    }
+}
