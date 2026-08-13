@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->string('bank_or_wallet')->nullable()->change();
+        Schema::table('children', function (Blueprint $table) {
+            $table->dropColumn('monthly_fee');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->string('bank_or_wallet')->nullable(false)->change();
+        Schema::table('children', function (Blueprint $table) {
+            $table->decimal('monthly_fee', 12, 2)->nullable()->after('subsidi_amount');
         });
     }
 };

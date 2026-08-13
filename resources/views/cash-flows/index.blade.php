@@ -12,6 +12,7 @@
 </div>
 
 <div class="space-y-6 relative">
+
     <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -456,7 +457,7 @@
                         @if(auth()->check() && auth()->user()->isAdmin())
                         <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end gap-1">
-                                <a href="{{ route('expenses.edit', $expense) }}"
+                                <a href="#" onclick="openEditExpenseModal({{ $expense->id }}); return false;"
                                    class="p-1.5 text-blue-600 hover:bg-blue-50/50 rounded-lg transition-colors" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
@@ -682,7 +683,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Jumlah (Rp) <span class="text-red-500">*</span></label>
-                    <input type="number" name="amount" id="editAmount" required min="0" step="100" class="w-full rounded-xl border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 px-4 py-2.5 text-sm transition-all">
+                    <input type="number" name="amount" id="editAmount" required min="0" class="w-full rounded-xl border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 px-4 py-2.5 text-sm transition-all">
                 </div>
             </div>
             <div>
@@ -692,6 +693,61 @@
             <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
                 <button type="button" onclick="closeModal('editIncomeModal')" class="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors">Batal</button>
                 <button type="submit" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg shadow-emerald-500/20 transition-all active:scale-95">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div id="editExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('editExpenseModal')"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 rounded-t-2xl flex items-center justify-between z-10">
+            <h2 class="text-lg font-bold text-gray-900">Edit Pengeluaran</h2>
+            <button onclick="closeModal('editExpenseModal')" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="editExpenseForm" method="POST" class="p-6 space-y-4">
+            @csrf
+            @method('PUT')
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Judul Pengeluaran <span class="text-red-500">*</span></label>
+                <input type="text" name="title" id="editExpenseTitle" required class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Kategori <span class="text-red-500">*</span></label>
+                <select name="expense_category_id" id="editExpenseCategoryId" required class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all bg-white">
+                    <option value="">— Pilih kategori —</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Tanggal <span class="text-red-500">*</span></label>
+                    <input type="date" name="date" id="editExpenseDate" required class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Jumlah (Rp) <span class="text-red-500">*</span></label>
+                    <input type="number" name="amount" id="editExpenseAmount" required min="0" class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Sumber Dana (Dompet) <span class="text-red-500">*</span></label>
+                <select name="wallet_id" id="editExpenseWalletId" required class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all bg-white">
+                    <option value="">— Pilih dompet —</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Penerima</label>
+                <input type="text" name="recipient" id="editExpenseRecipient" class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all" placeholder="Contoh: Bp. Ahmad">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Catatan</label>
+                <textarea name="notes" id="editExpenseNotes" rows="2" class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all" placeholder="Opsional..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                <button type="button" onclick="closeModal('editExpenseModal')" class="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors">Batal</button>
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium shadow-lg shadow-red-500/20 transition-all active:scale-95">Simpan</button>
             </div>
         </form>
     </div>
@@ -738,6 +794,8 @@ document.addEventListener('keydown', function(e) {
         closeModal('createIncomeModal');
         closeModal('createExpenseModal');
         closeModal('editIncomeModal');
+        closeModal('editExpenseModal');
+        closeModal('editExpenseModal');
     }
 });
 
@@ -765,7 +823,7 @@ function openEditIncomeModal(id) {
             data.children.forEach(child => {
                 const option = document.createElement('option');
                 option.value = child.id;
-                option.textContent = child.name + ' (' + child.service + ')';
+                option.textContent = child.name;
                 if (child.id == data.income.child_id) option.selected = true;
                 childSelect.appendChild(option);
             });
@@ -783,8 +841,8 @@ function openEditIncomeModal(id) {
 
             // Populate other fields
             document.getElementById('editSenderName').value = data.income.sender_name || '';
-            document.getElementById('editDate').value = data.income.date;
-            document.getElementById('editAmount').value = data.income.amount;
+            document.getElementById('editDate').value = data.income.date ? data.income.date.substring(0, 10) : '';
+            document.getElementById('editAmount').value = parseFloat(data.income.amount).toFixed(0);
             document.getElementById('editNotes').value = data.income.notes || '';
 
             // Set form action
@@ -806,6 +864,50 @@ function openEditIncomeModal(id) {
             openModal('editIncomeModal');
         })
         .catch(error => console.error('Error loading income data:', error));
+}
+
+let editingExpenseId = null;
+
+function openEditExpenseModal(id) {
+    editingExpenseId = id;
+    fetch('{{ route('expenses.edit-modal', ':id') }}'.replace(':id', id))
+        .then(response => response.json())
+        .then(data => {
+            // Populate categories
+            const catSelect = document.getElementById('editExpenseCategoryId');
+            catSelect.innerHTML = '<option value="">— Pilih kategori —</option>';
+            data.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                if (cat.id == data.expense.expense_category_id) option.selected = true;
+                catSelect.appendChild(option);
+            });
+
+            // Populate wallets
+            const walletSelect = document.getElementById('editExpenseWalletId');
+            walletSelect.innerHTML = '<option value="">— Pilih dompet —</option>';
+            data.wallets.forEach(wallet => {
+                const option = document.createElement('option');
+                option.value = wallet.id;
+                option.textContent = wallet.name;
+                if (wallet.id == data.expense.wallet_id) option.selected = true;
+                walletSelect.appendChild(option);
+            });
+
+            // Populate other fields
+            document.getElementById('editExpenseTitle').value = data.expense.title || '';
+            document.getElementById('editExpenseDate').value = data.expense.date ? data.expense.date.substring(0, 10) : '';
+            document.getElementById('editExpenseAmount').value = parseFloat(data.expense.amount).toFixed(0);
+            document.getElementById('editExpenseRecipient').value = data.expense.recipient || '';
+            document.getElementById('editExpenseNotes').value = data.expense.notes || '';
+
+            // Set form action
+            document.getElementById('editExpenseForm').action = '{{ url('/') }}/expenses/' + id;
+
+            openModal('editExpenseModal');
+        })
+        .catch(error => console.error('Error loading expense data:', error));
 }
 
 // Add change listener for edit income category

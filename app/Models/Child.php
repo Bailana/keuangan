@@ -58,7 +58,7 @@ class Child extends Model
 
     public function isTakingSekolah(): bool
     {
-        return !empty($this->class_name);
+        return !empty($this->class_name) || !empty($this->spp_fee);
     }
 
     public function isTakingTerapi(): bool

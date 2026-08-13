@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->string('bank_or_wallet')->nullable()->change();
+        Schema::table('invoice_payments', function (Blueprint $table) {
+            $table->string('invoice_number')->nullable()->after('id');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->string('bank_or_wallet')->nullable(false)->change();
+        Schema::table('invoice_payments', function (Blueprint $table) {
+            $table->dropColumn('invoice_number');
         });
     }
 };

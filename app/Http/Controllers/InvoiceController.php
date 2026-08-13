@@ -94,13 +94,27 @@ class InvoiceController extends Controller
             ['amount' => $amount]
         );
 
+        // Generate unique invoice number: INV-B[YY][MM]-[NNN]
+        $sequence = InvoicePayment::where('month', $month)
+            ->where('year', $year)
+            ->where('is_paid', false)
+            ->count() + 1;
+        $invoiceNumber = 'INV-B' . substr($year, 2) . sprintf('%02d', $month) . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+
+        $payment->update(['invoice_number' => $invoiceNumber]);
+
+        $kopSuratPath = public_path('images/kop_surat.png');
+        $logoPath = public_path('images/logo_am.png');
+
         $pdf = Pdf::loadView('invoices.invoice-unpaid', [
             'child' => $child,
             'payment' => $payment,
             'month' => $month,
             'year' => $year,
-            'invoiceNumber' => 'INV-' . $year . sprintf('%02d', $month) . '-' . sprintf('%03d', $child->id),
+            'invoiceNumber' => $invoiceNumber,
             'generatedDate' => now()->format('d F Y'),
+            'kopSuratPath' => $kopSuratPath,
+            'logoPath' => $logoPath,
         ]);
 
         $filename = 'Invoice-Belum-Lunas-' . $child->name . '-' . $month . '-' . $year . '.pdf';
@@ -121,13 +135,28 @@ class InvoiceController extends Controller
             ['amount' => $amount, 'is_paid' => true, 'paid_date' => now()->format('Y-m-d')]
         );
 
+        // Generate unique invoice number: INV-P[YY][MM]-[NNN]
+        $sequence = InvoicePayment::where('month', $month)
+            ->where('year', $year)
+            ->where('is_paid', true)
+            ->count() + 1;
+        $invoiceNumber = 'INV-P' . substr($year, 2) . sprintf('%02d', $month) . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+
+        $payment->update(['invoice_number' => $invoiceNumber]);
+
+        $kopSuratPath = public_path('images/kop_surat.png');
+        $logoPath = public_path('images/logo_am.png');
+
         $pdf = Pdf::loadView('invoices.invoice-paid', [
             'child' => $child,
             'payment' => $payment,
             'month' => $month,
             'year' => $year,
-            'invoiceNumber' => 'INV-' . $year . sprintf('%02d', $month) . '-' . sprintf('%03d', $child->id),
+            'invoiceNumber' => $invoiceNumber,
             'generatedDate' => now()->format('d F Y'),
+            'kopSuratPath' => $kopSuratPath,
+            'logoPath' => $logoPath,
+            'generatedBy' => Auth::user()->name ?? 'Admin',
         ]);
 
         $filename = 'Invoice-Lunas-' . $child->name . '-' . $month . '-' . $year . '.pdf';
@@ -172,6 +201,9 @@ class InvoiceController extends Controller
         );
         $payment->markAsPaid();
 
+        // Create income records for each service
+        $this->createIncomeForChild($child, $payment, $month, $year);
+
         return redirect()->route('invoices.index')->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai LUNAS.");
     }
 
@@ -189,10 +221,96 @@ class InvoiceController extends Controller
 
         if ($payment) {
             $payment->markAsUnpaid();
+
+            // Delete income records for this child and month/year
+            \App\Models\Income::where('child_id', $child->id)
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->delete();
+
             return redirect()->route('invoices.index')->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai BELUM BAYAR.");
         }
 
         return redirect()->route('invoices.index')->with('error', 'Data tagihan tidak ditemukan.');
+    }
+
+    private function createIncomeForChild(Child $child, InvoicePayment $payment, int $month, int $year): void
+    {
+        $defaultWallet = \App\Models\Wallet::where('is_default', true)->first();
+        if (!$defaultWallet) {
+            return;
+        }
+
+        $date = now()->format('Y-m-d');
+
+        // Delete existing incomes for this child/month/year first
+        \App\Models\Income::where('child_id', $child->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->delete();
+
+        // Create income for each service
+        $hasService = false;
+
+        foreach ($child->therapyTypes as $therapy) {
+            $hasService = true;
+            $category = \App\Models\IncomeCategory::where('name', 'Terapi')->first();
+            if ($category) {
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $category->id,
+                    'date' => $date,
+                    'amount' => (float) $therapy->pivot->monthly_sessions * (float) $therapy->price_per_session,
+                    'wallet_id' => $defaultWallet->id,
+                    'notes' => "Pembayaran Terapi {$therapy->name} - {$child->name} bulan {$month}/{$year}",
+                ]);
+            }
+        }
+
+        foreach ($child->vocationalTypes as $vokasi) {
+            $hasService = true;
+            $category = \App\Models\IncomeCategory::where('name', 'Vokasi')->first();
+            if ($category) {
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $category->id,
+                    'date' => $date,
+                    'amount' => (float) $vokasi->pivot->monthly_sessions * (float) $vokasi->price_per_session,
+                    'wallet_id' => $defaultWallet->id,
+                    'notes' => "Pembayaran Vokasi {$vokasi->name} - {$child->name} bulan {$month}/{$year}",
+                ]);
+            }
+        }
+
+        if ($child->isTakingSekolah()) {
+            $hasService = true;
+            $category = \App\Models\IncomeCategory::where('name', 'SPP')->first();
+            if ($category) {
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $category->id,
+                    'date' => $date,
+                    'amount' => (float) config('settings.school_fee', 1000000),
+                    'wallet_id' => $defaultWallet->id,
+                    'notes' => "Pembayaran SPP - {$child->name} bulan {$month}/{$year}",
+                ]);
+            }
+        }
+
+        // If no specific service, create general invoice income
+        if (!$hasService) {
+            $category = \App\Models\IncomeCategory::where('name', 'SPP')->first();
+            if ($category) {
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $category->id,
+                    'date' => $date,
+                    'amount' => $payment->amount,
+                    'wallet_id' => $defaultWallet->id,
+                    'notes' => "Pembayaran Invoice - {$child->name} bulan {$month}/{$year}",
+                ]);
+            }
+        }
     }
 
     private function getPaymentStatus(Child $child, int $month, int $year): string

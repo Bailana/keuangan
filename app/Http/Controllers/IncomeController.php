@@ -121,10 +121,8 @@ class IncomeController extends Controller
     {
         $data = [
             'income' => $income,
-            'children' => Child::all(['id', 'name', 'service']),
-            'categories' => IncomeCategory::whereIn('name', ['SPP', 'Terapi', 'Lain-lain'])
-                ->orderByRaw("CASE name WHEN 'SPP' THEN 1 WHEN 'Terapi' THEN 2 WHEN 'Lain-lain' THEN 3 ELSE 4 END")
-                ->get(['id', 'name']),
+            'children' => Child::all(['id', 'name']),
+            'categories' => IncomeCategory::orderBy('name')->get(['id', 'name']),
             'wallets' => Wallet::all(['id', 'name']),
         ];
         return response()->json($data);

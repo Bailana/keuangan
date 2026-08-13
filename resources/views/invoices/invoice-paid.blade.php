@@ -2,75 +2,124 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice - LUNAS {{ $child->name }}</title>
+    <title>Invoice {{ $invoiceNumber ?? 'Belum ada nomor' }} - LUNAS</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1f2937; margin: 0; padding: 30px; }
-        .header { text-align: center; border-bottom: 3px solid #16a34a; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #16a34a; font-size: 18px; }
-        .header p { margin: 3px 0 0; color: #6b7280; font-size: 10px; }
-        .section { margin-bottom: 18px; }
-        .section-title { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #15803d; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .info-table { width: 100%; border-collapse: collapse; }
-        .info-table td { padding: 4px 0; font-size: 11px; }
-        .info-table td:first-child { width: 140px; color: #6b7280; font-weight: 500; }
-        .info-table td:nth-child(2) { width: 12px; }
-        .info-table td:last-child { color: #1f2937; }
-        .subsidi-row { background: #f0fdf4; }
-        .amount-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0; }
-        .amount-box .label { font-size: 10px; color: #166534; text-transform: uppercase; letter-spacing: 1px; }
-        .amount-box .value { font-size: 28px; font-weight: 800; color: #16a34a; margin: 5px 0; }
-        .amount-box .note { font-size: 9px; color: #166534; }
-        .status-badge { display: inline-block; background: #16a34a; color: #fff; padding: 4px 14px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase; }
-        .stamp { display: inline-block; border: 3px solid #16a34a; color: #16a34a; padding: 6px 20px; font-size: 16px; font-weight: 900; text-transform: uppercase; transform: rotate(-5deg); margin: 15px auto; }
-        .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb; font-size: 9px; color: #9ca3af; text-align: center; }
-        .paid-info { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 10px 15px; margin: 15px 0; font-size: 11px; color: #166534; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px; }
-        table th { background: #f3f4f6; padding: 8px; text-align: left; font-weight: 600; color: #374151; border: 1px solid #e5e7eb; }
-        table td { padding: 8px; border: 1px solid #e5e7eb; }
-        table tr:nth-child(even) { background: #f9fafb; }
-        .total-row { font-weight: 700; background: #d1fae5 !important; }
-        .total-row td { color: #065f46; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Arial', sans-serif; font-size: 11px; color: #333; padding: 30px; }
+
+        .invoice-container { max-width: 800px; margin: 0 auto; position: relative; }
+
+        /* Header */
+        .invoice-header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .company-info h2 { font-size: 16px; color: #276749; margin-bottom: 5px; }
+        .company-info p { font-size: 10px; color: #666; line-height: 1.6; }
+        .invoice-title { text-align: right; }
+        .invoice-title h1 { font-size: 28px; color: #276749; font-weight: bold; margin-bottom: 5px; }
+        .invoice-title .number { font-size: 14px; color: #666; }
+
+        /* Divider */
+        .divider { height: 3px; background: #276749; margin: 20px 0; }
+
+        /* Bill To / Invoice Details */
+        .invoice-meta { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .bill-to h3 { font-size: 10px; text-transform: uppercase; color: #999; margin-bottom: 8px; }
+        .bill-to p { font-size: 12px; margin: 3px 0; }
+        .bill-to p strong { color: #333; }
+        .invoice-details { text-align: right; }
+        .invoice-details table { margin-left: auto; }
+        .invoice-details td { padding: 4px 0; font-size: 11px; }
+        .invoice-details td:first-child { color: #666; padding-right: 15px; }
+        .invoice-details td:last-child { font-weight: bold; }
+
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            width: 250px;
+            height: 250px;
+            opacity: 0.13;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Items Table */
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; position: relative; z-index: 1; }
+        .items-table th { background: #f0fff4; padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #666; border-bottom: 2px solid #c6f6d5; }
+        .items-table th:last-child { text-align: right; }
+        .items-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+        .items-table td:last-child { text-align: right; font-weight: bold; }
+        .items-table tr:last-child td { border-bottom: none; }
+
+        /* Totals */
+        .invoice-footer { display: flex; justify-content: space-between; margin-top: 20px; position: relative; z-index: 1; }
+        .payment-info { max-width: 50%; }
+        .payment-info h4 { font-size: 10px; text-transform: uppercase; color: #999; margin-bottom: 8px; }
+        .payment-info p { font-size: 11px; color: #666; margin: 4px 0; }
+        .totals { text-align: right; }
+        .totals table { margin-left: auto; }
+        .totals td { padding: 6px 0; font-size: 11px; }
+        .totals td:first-child { color: #666; padding-right: 20px; }
+        .totals tr.total-row td { font-size: 14px; font-weight: bold; color: #276749; border-top: 2px solid #276749; padding-top: 10px; }
+
+        /* Status Badge */
+        .status-badge { display: inline-block; background: #c6f6d5; color: #276749; padding: 6px 16px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-top: 15px; }
+
+        /* Signature */
+        .signature-section { margin-top: 50px; text-align: right; position: relative; z-index: 1; }
+        .signature-section p { font-size: 11px; margin: 3px 0; }
+        .signature-section .name { font-weight: bold; font-size: 12px; }
+
+        /* Footer */
+        .invoice-bottom { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 9px; color: #999; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Klinik Terapi & Sekolah Anak Mandiri</h1>
-        <p>Invoice Bukti Pembayaran Lunas</p>
-    </div>
+    <div class="invoice-container">
+        <!-- Watermark -->
+        <img src="{{ $logoPath }}" alt="Watermark" class="watermark">
 
-    <div style="text-align:center;">
-        <div class="stamp">LUNAS</div>
-    </div>
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="company-info">
+                <h2>Klinik Terapi & Sekolah Anak Mandiri</h2>
+                <p>Invoice Bukti Pembayaran Lunas<br>
+                {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}</p>
+            </div>
+            <div class="invoice-title">
+                <h1>INVOICE</h1>
+                <p class="number">{{ $invoiceNumber }}</p>
+            </div>
+        </div>
 
-    <div class="section">
-        <div class="section-title">Detail Invoice</div>
-        <table class="info-table">
-            <tr><td>No. Invoice</td><td>:</td><td><strong>{{ $invoiceNumber }}</strong></tr>
-            <tr><td>Tanggal Cetak</td><td>:</td><td>{{ $generatedDate }}</tr>
-            <tr><td>Periode</td><td>:</td><td>{{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}</tr>
-        </table>
-    </div>
+        <div class="divider"></div>
 
-    <div class="section">
-        <div class="section-title">Data Anak</div>
-        <table class="info-table">
-            <tr><td>Nama Anak</td><td>:</td><td><strong>{{ $child->name }}</strong></tr>
-            <tr><td>Nama Orang Tua</td><td>:</td><td>{{ $child->parent_name ?? '-' }}</tr>
-            <tr><td>No. WhatsApp</td><td>:</td><td>{{ $child->parent_whatsapp ?? '-' }}</tr>
-            <tr><td>Kelas</td><td>:</td><td>{{ $child->class_name ?? '-' }}</tr>
-        </table>
-    </div>
+        <!-- Meta Info -->
+        <div class="invoice-meta">
+            <div class="bill-to">
+                <h3>Data Anak</h3>
+                <p><strong>{{ $child->name }}</strong></p>
+                <p>{{ $child->parent_name ?? '-' }}</p>
+                <p>{{ $child->parent_whatsapp ?? '-' }}</p>
+                <p>Kelas: {{ $child->class_name ?? '-' }}</p>
+            </div>
+            <div class="invoice-details">
+                <table>
+                    <tr><td>Tanggal Cetak</td><td>{{ $generatedDate }}</td></tr>
+                    <tr><td>Tanggal Bayar</td><td>{{ $payment->paid_date ? \Carbon\Carbon::parse($payment->paid_date)->format('d F Y') : '-' }}</td></tr>
+                </table>
+            </div>
+        </div>
 
-    <div class="section">
-        <div class="section-title">Rincian Tagihan</div>
-        <table>
+        <!-- Items Table -->
+        <table class="items-table">
             <thead>
                 <tr>
                     <th>No</th>
                     <th>Jenis Layanan</th>
                     <th>Keterangan</th>
-                    <th style="text-align: right;">Jumlah</th>
+                    <th>Jumlah</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,7 +130,7 @@
                     <td>{{ $no++ }}</td>
                     <td>Terapi</td>
                     <td>{{ $therapy->name }} ({{ $sesi }} sesi)</td>
-                    <td style="text-align: right;">Rp {{ number_format((float)$therapy->price_per_session * $sesi, 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format((float)$therapy->price_per_session * $sesi, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
                 @foreach($child->vocationalTypes as $vokasi)
@@ -90,7 +139,7 @@
                     <td>{{ $no++ }}</td>
                     <td>Vokasi</td>
                     <td>{{ $vokasi->name }} ({{ $sesi }} sesi)</td>
-                    <td style="text-align: right;">Rp {{ number_format((float)$vokasi->price_per_session * $sesi, 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format((float)$vokasi->price_per_session * $sesi, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
                 @if($child->isTakingSekolah())
@@ -98,7 +147,7 @@
                     <td>{{ $no++ }}</td>
                     <td>Sekolah</td>
                     <td>SPP Bulanan (Kelas {{ $child->class_name ?? '-' }})</td>
-                    <td style="text-align: right;">Rp {{ number_format(config('settings.school_fee', 1000000), 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format(config('settings.school_fee', 1000000), 0, ',', '.') }}</td>
                 </tr>
                 @endif
                 @if($child->has_subsidi && $child->subsidi_amount > 0)
@@ -106,30 +155,40 @@
                     <td>{{ $no++ }}</td>
                     <td>Subsidi</td>
                     <td>Potongan subsidi admin</td>
-                    <td style="text-align: right; color: #059669;">- Rp {{ number_format((float)$child->subsidi_amount, 0, ',', '.') }}</td>
+                    <td style="color: #38a169;">- Rp {{ number_format((float)$child->subsidi_amount, 0, ',', '.') }}</td>
                 </tr>
                 @endif
-                <tr class="total-row">
-                    <td colspan="3" style="text-align: right;">TOTAL TAGIHAN</td>
-                    <td style="text-align: right;">Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
-                </tr>
             </tbody>
         </table>
-    </div>
 
-    <div class="amount-box">
-        <div class="label">Total Pembayaran</div>
-        <div class="value">Rp {{ number_format($payment->amount, 0, ',', '.') }}</div>
-        <div class="note">Status: <span class="status-badge">LUNAS</span></div>
-    </div>
+        <!-- Footer with Totals -->
+        <div class="invoice-footer">
+            <div class="payment-info">
+                <h4>Informasi Pembayaran</h4>
+                <p>Pembayaran telah diterima dengan baik.</p>
+                <p>Terima kasih atas kepercayaan Anda.</p>
+            </div>
+            <div class="totals">
+                <table>
+                    <tr>
+                        <td>Total Pembayaran</td>
+                        <td>Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
+                    </tr>
+                </table>
+                <span class="status-badge">LUNAS</span>
+            </div>
+        </div>
 
-    <div class="paid-info">
-        <strong>Pembayaran Lunas:</strong> {{ $payment->paid_date ? \Carbon\Carbon::parse($payment->paid_date)->format('d F Y') : '-' }}
-    </div>
+        <!-- Signature -->
+        <div class="signature-section">
+            <p>{{ $generatedDate }}</p>
+            <p class="name">{{ $generatedBy }}</p>
+            <p>Administrasi</p>
+        </div>
 
-    <div class="footer">
-        Dokumen ini dibuat secara otomatis oleh sistem.
-        <br>Klinik Terapi & Sekolah Khusus Anak Mandiri &copy; {{ date('Y') }}
+        <div class="invoice-bottom">
+            Klinik Terapi & Sekolah Anak Mandiri &copy; {{ date('Y') }}
+        </div>
     </div>
 </body>
 </html>

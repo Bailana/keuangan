@@ -122,6 +122,16 @@ class ExpenseController extends Controller
         return view('expenses.edit', compact('expense', 'categories', 'wallets'));
     }
 
+    public function editModal(Expense $expense)
+    {
+        $data = [
+            'expense' => $expense,
+            'categories' => ExpenseCategory::all(['id', 'name']),
+            'wallets' => \App\Models\Wallet::all(['id', 'name']),
+        ];
+        return response()->json($data);
+    }
+
     public function update(Request $request, Expense $expense)
     {
         $validated = $request->validate([

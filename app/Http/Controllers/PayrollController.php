@@ -195,6 +195,9 @@ class PayrollController extends Controller
             ]
         );
 
+        // Create expense record for payroll
+        $this->createExpenseForPayroll($payroll, $validated['paid_amount']);
+
         return redirect()->route('payroll.index')->with('success', 'Pembayaran gaji ditandai lunas.');
     }
 
@@ -202,7 +205,39 @@ class PayrollController extends Controller
     {
         $payroll->update(['paid' => false, 'paid_at' => null]);
         SalaryPayment::where('salary_record_id', $payroll->id)->delete();
+
+        // Delete expense record for this payroll
+        \App\Models\Expense::where('title', 'like', '%Gaji ' . $payroll->employee_name . '%')
+            ->whereMonth('date', $payroll->month)
+            ->whereYear('date', $payroll->year)
+            ->delete();
+
         return redirect()->route('payroll.index')->with('success', 'Status pembayaran dikembalikan ke belum dibayar.');
+    }
+
+    private function createExpenseForPayroll(SalaryRecord $payroll, float $amount): void
+    {
+        $category = \App\Models\ExpenseCategory::where('name', 'Gaji Karyawan')->first();
+        $wallet = \App\Models\Wallet::where('is_default', true)->first();
+
+        if (!$category || !$wallet) {
+            return;
+        }
+
+        // Delete existing expense for this payroll first
+        \App\Models\Expense::where('title', 'like', '%Gaji ' . $payroll->employee_name . '%')
+            ->whereMonth('date', $payroll->month)
+            ->whereYear('date', $payroll->year)
+            ->delete();
+
+        \App\Models\Expense::create([
+            'expense_category_id' => $category->id,
+            'title' => 'Gaji ' . $payroll->employee_name . ' - ' . \Carbon\Carbon::create($payroll->year, $payroll->month, 1)->format('F Y'),
+            'date' => now()->format('Y-m-d'),
+            'amount' => $amount,
+            'wallet_id' => $wallet->id,
+            'notes' => 'Pembayaran gaji ' . $payroll->employee_name . ' bulan ' . $payroll->month . '/' . $payroll->year,
+        ]);
     }
 
     public function destroy(SalaryRecord $payroll)

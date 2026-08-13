@@ -5,7 +5,28 @@
       "Bash(curl -s -X POST http://127.0.0.1:8000/expenses/ocr -H 'X-CSRF-TOKEN: test123' -F image=@d:/finance_AM/storage/app/public/ocr-temp/wI5x5jlKsA11VivjIBxC5GLo8D5fvtyVNmOv4Mjg.jpg)",
       "Bash(curl -s http://127.0.0.1:8000/expenses/index)",
       "Bash(cd d:/finance_AM && cat /tmp/login_resp.html | grep -i 'token\\\\|csrf' | head -5)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(curl -s \"http://127.0.0.1:5173/node_modules/.vite/deps/alpinejs.js\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/node_modules/.vite/deps/alpinejs.js\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/node_modules/.vite/deps/alpinejs.js\" -o /dev/null -w \"%{size_download}\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/@vite/client\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/node_modules/.vite/deps/alpinejs.js\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/node_modules/.vite/deps/@alpinejs_collapse.js\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/resources/css/app.css\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s -I \"http://127.0.0.1:5173/resources/js/app.js\")",
+      "Bash(curl -s -I \"http://127.0.0.1:5173/node_modules/.vite/deps/alpinejs.js\")",
+      "Bash(curl -s -I \"http://127.0.0.1:5173/@vite/client\")",
+      "Bash(curl -s -I \"http://127.0.0.1:8000/dashboard\")",
+      "Bash(curl -s \"http://127.0.0.1:8000/dashboard\")",
+      "Bash(php artisan *)",
+      "Bash(curl -s \"http://127.0.0.1:8000/cash-flows\")",
+      "Bash(curl -s \"http://127.0.0.1:8000/cash-flows\" -b \"laravel-session=test\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/resources/js/app.js\")",
+      "Bash(curl -s \"http://localhost:5173/\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"http://127.0.0.1:5173/\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"http://localhost:5173/node_modules/.vite/deps/alpinejs.js\" -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"http://127.0.0.1:8000/login\")"
     ]
   }
 }

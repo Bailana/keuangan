@@ -15,6 +15,7 @@
 
     <!-- Dashboard -->
     <a href="{{ route('dashboard') }}"
+       onclick="window.location.href='{{ route('dashboard') }}'; return false;"
        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
               {{ request()->routeIs('dashboard') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
        :class="sidebarCollapsed ? 'justify-center px-2' : ''"
@@ -26,10 +27,10 @@
     </a>
 
     <!-- Keuangan & Transaksi (Dropdown) -->
-    <div x-data="{ open: {{ request()->routeIs('cash-flows') || request()->routeIs('wallets.*') || request()->routeIs('invoices.*') || request()->routeIs('activity-logs.*') ? 'true' : 'false' }} }">
+    <div x-data="{ open: {{ request()->routeIs('cash-flows') || request()->routeIs('wallets.*') || request()->routeIs('invoices.*') ? 'true' : 'false' }} }">
         <button @click="open = !open"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                       {{ request()->routeIs('cash-flows') || request()->routeIs('wallets.*') || request()->routeIs('invoices.*') || request()->routeIs('activity-logs.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
+                       text-slate-300/80 hover:bg-white/10 hover:text-white"
                 :class="sidebarCollapsed ? 'justify-center px-2' : ''"
                 :title="sidebarCollapsed ? 'Keuangan & Transaksi' : ''">
             <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
@@ -43,6 +44,7 @@
                 <!-- Arus Kas -->
                 <div>
                     <a href="{{ route('cash-flows') }}"
+                       onclick="window.location.href='{{ route('cash-flows') }}'; return false;"
                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                               {{ request()->routeIs('cash-flows') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11l5-5m0 0l5 5m-5-5v12M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
@@ -52,6 +54,7 @@
                 <div class="my-1 border-t border-white/5"></div>
                 <!-- Invoice -->
                 <a href="{{ route('invoices.index') }}"
+                   onclick="window.location.href='{{ route('invoices.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('invoices.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -60,6 +63,7 @@
                 <div class="my-1 border-t border-white/5"></div>
                 <!-- Dompet -->
                 <a href="{{ route('wallets.index') }}"
+                   onclick="window.location.href='{{ route('wallets.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('wallets.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -73,7 +77,7 @@
     <div x-data="{ open: {{ request()->routeIs('payroll.*') ? 'true' : 'false' }} }">
         <button @click="open = !open"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                       {{ request()->routeIs('payroll.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
+                       text-slate-300/80 hover:bg-white/10 hover:text-white"
                 :class="sidebarCollapsed ? 'justify-center px-2' : ''"
                 :title="sidebarCollapsed ? 'Penggajian' : ''">
             <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
@@ -85,12 +89,14 @@
         <div x-show="!sidebarCollapsed && open" x-collapse x-transition>
             <div class="ml-4 mt-1 space-y-1 border-l-2 border-white/10 pl-3">
                 <a href="{{ route('payroll.index') }}"
+                   onclick="window.location.href='{{ route('payroll.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('payroll.index') || request()->routeIs('payroll.create') || request()->routeIs('payroll.edit') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     Gaji Karyawan
                 </a>
                 <a href="{{ route('payroll.history') }}"
+                   onclick="window.location.href='{{ route('payroll.history') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('payroll.history') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -104,7 +110,7 @@
     <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
         <button @click="open = !open"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                       {{ request()->routeIs('reports.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
+                       text-slate-300/80 hover:bg-white/10 hover:text-white"
                 :class="sidebarCollapsed ? 'justify-center px-2' : ''"
                 :title="sidebarCollapsed ? 'Laporan Keuangan' : ''">
             <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
@@ -116,18 +122,21 @@
         <div x-show="!sidebarCollapsed && open" x-collapse x-transition>
             <div class="ml-4 mt-1 space-y-1 border-l-2 border-white/10 pl-3">
                 <a href="{{ route('reports.profit-loss') }}"
+                   onclick="window.location.href='{{ route('reports.profit-loss') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('reports.profit-loss') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                     Laba / Rugi
                 </a>
                 <a href="{{ route('reports.arrears') }}"
+                   onclick="window.location.href='{{ route('reports.arrears') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('reports.arrears') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                     Rekap Tunggakan
                 </a>
                 <a href="{{ route('reports.revenue') }}"
+                   onclick="window.location.href='{{ route('reports.revenue') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('reports.revenue') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
@@ -139,6 +148,7 @@
 
     <!-- Perencanaan -->
     <a href="{{ route('plans.index') }}"
+       onclick="window.location.href='{{ route('plans.index') }}'; return false;"
        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
               {{ request()->routeIs('plans.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
        :class="sidebarCollapsed ? 'justify-center px-2' : ''"
@@ -152,6 +162,7 @@
     <!-- Log Aktivitas (Admin Only) -->
     @if(auth()->check() && auth()->user()->isAdmin())
     <a href="{{ route('activity-logs.index') }}"
+       onclick="window.location.href='{{ route('activity-logs.index') }}'; return false;"
        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
               {{ request()->routeIs('activity-logs.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
        :class="sidebarCollapsed ? 'justify-center px-2' : ''"
@@ -166,6 +177,7 @@
     <!-- Manajemen Pengguna (Superadmin Only) -->
     @if(auth()->check() && auth()->user()->isSuperAdmin())
     <a href="{{ route('users.index') }}"
+       onclick="window.location.href='{{ route('users.index') }}'; return false;"
        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
               {{ request()->routeIs('users.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
        :class="sidebarCollapsed ? 'justify-center px-2' : ''"
@@ -186,7 +198,7 @@
     <div x-data="{ open: {{ request()->routeIs('therapy-types.*') || request()->routeIs('vocational-types.*') || request()->routeIs('children.*') || request()->routeIs('employees.*') ? 'true' : 'false' }} }">
         <button @click="open = !open"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                       {{ request()->routeIs('therapy-types.*') || request()->routeIs('vocational-types.*') || request()->routeIs('children.*') || request()->routeIs('employees.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
+                       text-slate-300/80 hover:bg-white/10 hover:text-white"
                 :class="sidebarCollapsed ? 'justify-center px-2' : ''"
                 :title="sidebarCollapsed ? 'Master Data' : ''">
             <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
@@ -198,24 +210,28 @@
         <div x-show="!sidebarCollapsed && open" x-collapse x-transition>
             <div class="ml-4 mt-1 space-y-1 border-l-2 border-white/10 pl-3">
                 <a href="{{ route('therapy-types.index') }}"
+                   onclick="window.location.href='{{ route('therapy-types.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('therapy-types.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     Jenis Terapi
                 </a>
                 <a href="{{ route('vocational-types.index') }}"
+                   onclick="window.location.href='{{ route('vocational-types.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('vocational-types.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     Jenis Vokasi
                 </a>
                 <a href="{{ route('children.index') }}"
+                   onclick="window.location.href='{{ route('children.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('children.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Data Anak
                 </a>
                 <a href="{{ route('employees.index') }}"
+                   onclick="window.location.href='{{ route('employees.index') }}'; return false;"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                           {{ request()->routeIs('employees.*') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>

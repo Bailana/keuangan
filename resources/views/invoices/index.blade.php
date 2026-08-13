@@ -155,13 +155,13 @@
     <!-- Invoice Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @forelse($children as $child)
-        <div class="relative rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
+        <div class="relative rounded-2xl overflow-hidden hover:shadow-md transition-shadow flex flex-col"
              style="background: rgba(255,255,255,0.45); backdrop-filter: blur(24px) saturate(180%);
                     -webkit-backdrop-filter: blur(24px) saturate(180%);
                     box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8);
                     border: 1px solid rgba(255,255,255,0.7);">
             <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-2xl"></div>
-            <div class="relative z-10 p-5">
+            <div class="relative z-10 p-5 flex flex-col flex-grow">
 
                 <!-- Header: Name + Status -->
                 <div class="flex items-start justify-between mb-4">
@@ -249,7 +249,7 @@
                 @endif
 
                 <!-- Bottom: Amount + Actions -->
-                <div class="flex items-center justify-between pt-4 border-t border-white/50">
+                <div class="mt-auto flex items-center justify-between pt-4 border-t border-white/50">
                     <div>
                         <div class="text-xs text-gray-500">Tagihan</div>
                         <div class="font-bold text-gray-900 text-sm">
@@ -258,11 +258,19 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <!-- PDF -->
-                        <a href="{{ route('invoices.generate', ['child' => $child->id, 'month' => $currentMonth, 'year' => $currentYear]) }}"
-                           target="_blank"
-                           class="p-2 rounded-lg text-blue-600 hover:bg-blue-50/50 transition-colors" title="Download PDF">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                        </a>
+                        @if($child->payment_status === 'paid')
+                            <a href="{{ route('invoices.generatePaid', ['child' => $child->id, 'month' => $currentMonth, 'year' => $currentYear]) }}"
+                               target="_blank"
+                               class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50/50 transition-colors" title="Download PDF (Lunas)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                            </a>
+                        @else
+                            <a href="{{ route('invoices.generate', ['child' => $child->id, 'month' => $currentMonth, 'year' => $currentYear]) }}"
+                               target="_blank"
+                               class="p-2 rounded-lg text-blue-600 hover:bg-blue-50/50 transition-colors" title="Download PDF">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                            </a>
+                        @endif
 
                         @if(auth()->user()->isAdmin())
                             @if($child->payment_status === 'paid')

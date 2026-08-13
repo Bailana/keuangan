@@ -97,12 +97,17 @@ class ChildController extends Controller
             'vocational_sessions' => 'nullable|array',
         ]);
 
+        // If school service is not selected, clear school-related fields
+        if (!$request->has('is_sekolah')) {
+            $request->merge(['class_name' => null, 'spp_fee' => null]);
+        }
+
         $child = Child::create([
             'name' => $validated['name'],
             'parent_name' => $validated['parent_name'] ?? null,
             'parent_whatsapp' => $validated['parent_whatsapp'] ?? null,
-            'class_name' => $validated['class_name'] ?? null,
-            'spp_fee' => $validated['spp_fee'] ?? null,
+            'class_name' => $request->class_name,
+            'spp_fee' => $request->spp_fee,
             'has_subsidi' => $validated['has_subsidi'] ?? false,
             'subsidi_amount' => ($validated['has_subsidi'] ?? false) ? ($validated['subsidi_amount'] ?? 0) : null,
         ]);
@@ -155,12 +160,17 @@ class ChildController extends Controller
             'vocational_sessions' => 'nullable|array',
         ]);
 
+        // If school service is not selected, clear school-related fields
+        if (!$request->has('is_sekolah')) {
+            $request->merge(['class_name' => null, 'spp_fee' => null]);
+        }
+
         $child->update([
             'name' => $validated['name'],
             'parent_name' => $validated['parent_name'] ?? null,
             'parent_whatsapp' => $validated['parent_whatsapp'] ?? null,
-            'class_name' => $validated['class_name'] ?? null,
-            'spp_fee' => $validated['spp_fee'] ?? null,
+            'class_name' => $request->class_name,
+            'spp_fee' => $request->spp_fee,
             'has_subsidi' => $validated['has_subsidi'] ?? false,
             'subsidi_amount' => ($validated['has_subsidi'] ?? false) ? ($validated['subsidi_amount'] ?? 0) : null,
         ]);

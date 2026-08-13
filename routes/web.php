@@ -127,7 +127,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/incomes/{income}', [IncomeController::class, 'destroy'])->name('incomes.destroy');
 
         Route::get('/expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
-        Route::get('/expenses/{expense}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
+        Route::get('/expenses/{expense}/edit-modal', [ExpenseController::class, 'editModal'])->name('expenses.edit-modal');
         Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
         Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
         Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');

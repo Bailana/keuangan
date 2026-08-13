@@ -73,61 +73,63 @@
         <!-- Activity List -->
         <div class="divide-y divide-gray-100/50">
             @forelse($logs as $log)
-            <div class="px-6 py-4 hover:bg-gray-50/50 transition-colors flex items-center gap-4" style="cursor: pointer;" onclick="toggleDetail({{ $log->id }})">
-                <!-- Checkbox -->
-                @if(auth()->user()->isAdmin())
-                <div class="flex-shrink-0" onclick="event.stopPropagation()">
-                    <input type="checkbox" name="ids[]" value="{{ $log->id }}" class="log-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-id="{{ $log->id }}">
-                </div>
-                @endif
+            <div class="px-6 py-4 hover:bg-gray-50/50 transition-colors" style="cursor: pointer;" onclick="toggleDetail({{ $log->id }})">
+                <div class="grid grid-cols-[32px_100px_40px_1fr_auto] gap-4 items-center sm:grid-cols-[32px_110px_40px_1fr_auto]">
+                    <!-- Checkbox -->
+                    @if(auth()->user()->isAdmin())
+                    <div class="flex-shrink-0" onclick="event.stopPropagation()">
+                        <input type="checkbox" name="ids[]" value="{{ $log->id }}" class="log-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-id="{{ $log->id }}">
+                    </div>
+                    @endif
 
-                <!-- Action Badge -->
-                <div class="flex-shrink-0">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $log->action_color }}">
-                        @if($log->action === 'create')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        @elseif($log->action === 'update')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        @elseif($log->action === 'delete')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        @elseif($log->action === 'login')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        @elseif($log->action === 'logout')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        @elseif($log->action === 'export_pdf')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                        @elseif($log->action === 'export_excel')
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        @endif
-                        {{ $log->action_label }}
-                    </span>
-                </div>
+                    <!-- Action Badge -->
+                    <div class="flex-shrink-0">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $log->action_color }}">
+                            @if($log->action === 'create')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            @elseif($log->action === 'update')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            @elseif($log->action === 'delete')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            @elseif($log->action === 'login')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            @elseif($log->action === 'logout')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            @elseif($log->action === 'export_pdf')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            @elseif($log->action === 'export_excel')
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            @endif
+                            {{ $log->action_label }}
+                        </span>
+                    </div>
 
-                <!-- User Avatar -->
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 rounded-full {{ $log->user ? 'bg-gradient-to-br from-purple-400 to-blue-500' : 'bg-gray-300' }} flex items-center justify-center text-white text-xs font-bold">
-                        {{ $log->user ? strtoupper(substr($log->user->name, 0, 1)) : '?' }}
+                    <!-- User Avatar -->
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full {{ $log->user ? 'bg-gradient-to-br from-purple-400 to-blue-500' : 'bg-gray-300' }} flex items-center justify-center text-white text-xs font-bold">
+                            {{ $log->user ? strtoupper(substr($log->user->name, 0, 1)) : '?' }}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="min-w-0">
+                        <p class="text-sm text-gray-900 truncate">{{ $log->description }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ $log->user ? $log->user->name : 'System' }} &middot; {{ $log->subject_label ?? '-' }}
+                        </p>
+                    </div>
+
+                    <!-- Date + Toggle -->
+                    <div class="flex-shrink-0 flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-medium text-gray-700">{{ $log->created_at->format('d M Y') }}</p>
+                            <p class="text-xs text-gray-400">{{ $log->created_at->format('H:i') }}</p>
+                        </div>
+                        <button onclick="event.stopPropagation(); toggleDetail({{ $log->id }})" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Lihat detail">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
                     </div>
                 </div>
-
-                <!-- Description -->
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-900 truncate">{{ $log->description }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">
-                        {{ $log->user ? $log->user->name : 'System' }} &middot; {{ $log->subject_label ?? '-' }}
-                    </p>
-                </div>
-
-                <!-- Date -->
-                <div class="flex-shrink-0 text-right hidden sm:block">
-                    <p class="text-sm font-medium text-gray-700">{{ $log->created_at->format('d M Y') }}</p>
-                    <p class="text-xs text-gray-400">{{ $log->created_at->format('H:i') }}</p>
-                </div>
-
-                <!-- Toggle Details Button -->
-                <button onclick="event.stopPropagation(); toggleDetail({{ $log->id }})" class="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Lihat detail">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
             </div>
 
             <!-- Detail Row (hidden by default) -->

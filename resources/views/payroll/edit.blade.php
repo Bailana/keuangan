@@ -106,13 +106,13 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">BPJS Kesehatan (Rp)</label>
-                        <input type="number" name="transport_allowance" min="0" step="1000" id="transportAllowance"
+                        <input type="number" name="transport_allowance" min="0" id="transportAllowance"
                             value="{{ old('transport_allowance', (int)($payroll->transport_allowance ?? 0)) }}"
                             class="w-full rounded-xl border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 px-4 py-2.5 text-sm transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">BPJS Ketenagakerjaan (Rp)</label>
-                        <input type="number" name="deductions" min="0" step="1000" id="deductions"
+                        <input type="number" name="deductions" min="0" id="deductions"
                             value="{{ old('deductions', (int)($payroll->deductions ?? 0)) }}"
                             class="w-full rounded-xl border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 px-4 py-2.5 text-sm transition-all">
                     </div>
