@@ -224,7 +224,7 @@
         </header>
 
         <!-- Content -->
-        <main class="min-h-screen" style="scroll-behavior: smooth;">
+        <main class="min-h-screen relative" style="scroll-behavior: smooth;">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 @if (session('success'))
                     <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 animate-fade-in-up">

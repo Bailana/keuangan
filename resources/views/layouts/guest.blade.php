@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Mandiri') }} — @yield('title')</title>
+    <title>{{ config('app.name', 'Klinik Terapi & Sekolah Khusus Anak Mandiri') }} — @yield('title')</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo_am.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -61,17 +62,8 @@
         <!-- Logo -->
         <div class="animate-fade-in-up mb-8 text-center">
             <a href="{{ url('/') }}" class="inline-block">
-                <div class="flex items-center justify-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shadow-lg">
-                        <svg class="w-7 h-7 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-                    </div>
-                    <div class="text-left">
-                        <span class="text-xl font-bold text-white tracking-tight">Mandiri</span>
-                        <span class="block text-xs text-white/50 font-medium -mt-0.5">Klinik & Sekolah</span>
-                    </div>
-                </div>
+                <img src="{{ asset('images/logo_am.png') }}" alt="Logo" class="h-14 w-auto mx-auto mb-3">
+                <p class="text-xs text-white/50 font-medium tracking-wide">Klinik Terapi & Sekolah Khusus Anak Mandiri</p>
             </a>
         </div>
 

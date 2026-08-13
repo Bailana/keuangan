@@ -102,14 +102,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/plans/index', [FinancialPlanController::class, 'index'])->name('plans.index');
     Route::get('/plans/create', [FinancialPlanController::class, 'create'])->name('plans.create');
     Route::get('/plans/{plan}/edit', [FinancialPlanController::class, 'edit'])->name('plans.edit');
+    Route::get('/plans/export/pdf', [FinancialPlanController::class, 'exportPdf'])->name('plans.export.pdf');
+    Route::get('/plans/export/excel', [FinancialPlanController::class, 'exportExcel'])->name('plans.export.excel');
 
     // Laporan Keuangan
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
     Route::get('/reports/profit-loss/export/pdf', [ReportController::class, 'exportProfitLossPdf'])->name('reports.profit-loss.export.pdf');
     Route::get('/reports/profit-loss/export/excel', [ReportController::class, 'exportProfitLossExcel'])->name('reports.profit-loss.export.excel');
-    Route::get('/reports/arrears', [ReportController::class, 'arrears'])->name('reports.arrears');
-    Route::get('/reports/arrears/export/pdf', [ReportController::class, 'exportArrearsPdf'])->name('reports.arrears.export.pdf');
-    Route::get('/reports/arrears/export/excel', [ReportController::class, 'exportArrearsExcel'])->name('reports.arrears.export.excel');
     Route::get('/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
     Route::get('/reports/revenue/export/pdf', [ReportController::class, 'exportRevenuePdf'])->name('reports.revenue.export.pdf');
     Route::get('/reports/revenue/export/excel', [ReportController::class, 'exportRevenueExcel'])->name('reports.revenue.export.excel');
@@ -162,4 +161,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+
+Route::middleware(['web'])->group(function () {
+    require __DIR__.'/auth.php';
+});

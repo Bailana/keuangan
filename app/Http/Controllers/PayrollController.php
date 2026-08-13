@@ -31,7 +31,8 @@ class PayrollController extends Controller
             }
         }
 
-        $records = $query->orderBy('salary_date', 'desc')->paginate(20);
+        $perPage = (int) max(5, min(100, $request->input('per_page', 15)));
+        $records = $query->orderBy('salary_date', 'desc')->paginate($perPage);
 
         $stats = [
             'total' => SalaryRecord::count(),
@@ -47,7 +48,7 @@ class PayrollController extends Controller
             $months[] = ['month' => $date->month, 'year' => $date->year];
         }
 
-        return view('payroll.index', compact('records', 'stats', 'months'));
+        return view('payroll.index', compact('records', 'stats', 'months', 'perPage'));
     }
 
     public function create()

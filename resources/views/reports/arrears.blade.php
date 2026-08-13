@@ -5,10 +5,43 @@
 @section('content')
 <div class="space-y-6 relative">
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Rekap Tunggakan</h1>
-            <p class="text-xs sm:text-sm text-gray-500 mt-1">Monitoring tagihan dan pembayaran siswa</p>
+    <!-- Summary -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
+             style="background: linear-gradient(135deg, rgba(16,185,129,0.85) 0%, rgba(5,150,105,0.95) 100%);
+                    box-shadow: 0 8px 32px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+                    border: 1px solid rgba(255,255,255,0.3);">
+            <div class="relative z-10">
+                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Lunas</p>
+                <p class="text-2xl font-bold mt-1">{{ $summary['paid'] }}</p>
+            </div>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
+             style="background: linear-gradient(135deg, rgba(245,158,11,0.85) 0%, rgba(217,119,6,0.95) 100%);
+                    box-shadow: 0 8px 32px rgba(245,158,11,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+                    border: 1px solid rgba(255,255,255,0.3);">
+            <div class="relative z-10">
+                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Sebagian</p>
+                <p class="text-2xl font-bold mt-1">{{ $summary['partial'] }}</p>
+            </div>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
+             style="background: linear-gradient(135deg, rgba(239,68,68,0.85) 0%, rgba(220,38,38,0.95) 100%);
+                    box-shadow: 0 8px 32px rgba(239,68,68,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+                    border: 1px solid rgba(255,255,255,0.3);">
+            <div class="relative z-10">
+                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Belum Bayar</p>
+                <p class="text-2xl font-bold mt-1">{{ $summary['unpaid'] }}</p>
+            </div>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
+             style="background: linear-gradient(135deg, rgba(127,29,29,0.85) 0%, rgba(127,29,29,0.95) 100%);
+                    box-shadow: 0 8px 32px rgba(127,29,29,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+                    border: 1px solid rgba(255,255,255,0.3);">
+            <div class="relative z-10">
+                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Total Tunggakan</p>
+                <p class="text-xl font-bold mt-1">Rp {{ number_format($summary['totalOutstanding'], 0, ',', '.') }}</p>
+            </div>
         </div>
     </div>
 
@@ -20,7 +53,8 @@
         <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-2xl"></div>
         <div class="relative z-10">
             <form method="GET" class="flex flex-wrap gap-3 items-end">
-                <div class="w-[120px]">
+                <input type="hidden" name="per_page" value="{{ $perPage }}">
+                <div class="flex-1 min-w-[120px]">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Tahun</label>
                     <select name="year" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
                         @foreach(range(now()->year - 2, now()->year + 1) as $y)
@@ -28,7 +62,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="w-[140px]">
+                <div class="flex-1 min-w-[120px]">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Bulan</label>
                     <select name="month" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
                         @foreach(range(1, 12) as $m)
@@ -38,7 +72,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="w-[140px]">
+                <div class="flex-1 min-w-[120px]">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
                     <select name="status" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
                         <option value="">Semua</option>
@@ -48,7 +82,7 @@
                         <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Jatuh Tempo</option>
                     </select>
                 </div>
-                <div class="w-[150px]">
+                <div class="flex-1 min-w-[120px]">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Dompet</label>
                     <select name="wallet_id" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
                         <option value="">Semua Dompet</option>
@@ -88,46 +122,6 @@
                     </a>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Summary -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
-             style="background: linear-gradient(135deg, rgba(16,185,129,0.85) 0%, rgba(5,150,105,0.95) 100%);
-                    box-shadow: 0 8px 32px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
-                    border: 1px solid rgba(255,255,255,0.3);">
-            <div class="relative z-10">
-                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Lunas</p>
-                <p class="text-2xl font-bold mt-1">{{ $summary['paid'] }}</p>
-            </div>
-        </div>
-        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
-             style="background: linear-gradient(135deg, rgba(245,158,11,0.85) 0%, rgba(217,119,6,0.95) 100%);
-                    box-shadow: 0 8px 32px rgba(245,158,11,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
-                    border: 1px solid rgba(255,255,255,0.3);">
-            <div class="relative z-10">
-                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Sebagian</p>
-                <p class="text-2xl font-bold mt-1">{{ $summary['partial'] }}</p>
-            </div>
-        </div>
-        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
-             style="background: linear-gradient(135deg, rgba(239,68,68,0.85) 0%, rgba(220,38,38,0.95) 100%);
-                    box-shadow: 0 8px 32px rgba(239,68,68,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
-                    border: 1px solid rgba(255,255,255,0.3);">
-            <div class="relative z-10">
-                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Belum Bayar</p>
-                <p class="text-2xl font-bold mt-1">{{ $summary['unpaid'] }}</p>
-            </div>
-        </div>
-        <div class="relative rounded-2xl overflow-hidden p-4 text-white"
-             style="background: linear-gradient(135deg, rgba(127,29,29,0.85) 0%, rgba(127,29,29,0.95) 100%);
-                    box-shadow: 0 8px 32px rgba(127,29,29,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
-                    border: 1px solid rgba(255,255,255,0.3);">
-            <div class="relative z-10">
-                <p class="text-white/75 text-xs font-semibold uppercase tracking-wider">Total Tunggakan</p>
-                <p class="text-xl font-bold mt-1">Rp {{ number_format($summary['totalOutstanding'], 0, ',', '.') }}</p>
-            </div>
         </div>
     </div>
 
@@ -212,6 +206,21 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        <div class="relative z-10 px-4 py-3 border-t border-gray-200/50">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">Tampilkan</span>
+                    <select onchange="this.form.submit()" name="per_page"
+                        class="text-xs border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white/60 appearance-none cursor-pointer w-[64px] text-center">
+                        @foreach([5, 10, 15, 25, 50] as $n)
+                        <option value="{{ $n }}" {{ $perPage == $n ? 'selected' : '' }}>{{ $n }}</option>
+                        @endforeach
+                    </select>
+                    <span class="text-xs text-gray-500">baris</span>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>

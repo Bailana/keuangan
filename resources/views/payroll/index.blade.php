@@ -73,6 +73,7 @@
         <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-2xl"></div>
         <div class="relative z-10">
             <form method="GET" class="flex flex-wrap gap-3 items-end">
+                <input type="hidden" name="per_page" value="{{ $perPage }}">
                 <div class="w-[150px]">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Bulan</label>
                     <select name="month" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
@@ -207,7 +208,21 @@
             </table>
         </div>
         @if($records->hasPages())
-        <div class="relative z-10 px-4 py-3 border-t border-gray-200/50">{{ $records->links() }}</div>
+        <div class="relative z-10 px-4 py-3 border-t border-gray-200/50">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">Tampilkan</span>
+                    <select onchange="this.form.submit()" name="per_page"
+                        class="text-xs border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/60 appearance-none cursor-pointer w-[64px] text-center">
+                        @foreach([5, 10, 15, 25, 50] as $n)
+                        <option value="{{ $n }}" {{ $perPage == $n ? 'selected' : '' }}>{{ $n }}</option>
+                        @endforeach
+                    </select>
+                    <span class="text-xs text-gray-500">baris</span>
+                </div>
+                {{ $records->withQueryString()->links('vendor.pagination.payrollflows') }}
+            </div>
+        </div>
         @endif
     </div>
 </div>

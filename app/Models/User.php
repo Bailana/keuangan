@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,12 +11,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'password', 'role', 'avatar_path', 'phone', 'job_title', 'sidebar_collapsed'])]
+#[Fillable(['name', 'email', 'password', 'role', 'avatar_path', 'phone', 'job_title', 'sidebar_collapsed', 'google_id', 'avatar_url'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword;
 
     protected function casts(): array
     {
@@ -51,7 +52,14 @@ class User extends Authenticatable
         if ($this->avatar_path && Storage::disk('public')->exists($this->avatar_path)) {
             return Storage::url($this->avatar_path);
         }
-        // Avatar default berbasis inisial via UI (DiceBear fallback inline di view)
+        if ($this->avatar_url) {
+            return $this->avatar_url;
+        }
         return '';
+    }
+
+    public function canSocialLogin(): bool
+    {
+        return !empty($this->google_id);
     }
 }
