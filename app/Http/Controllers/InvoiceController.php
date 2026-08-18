@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class InvoiceController extends Controller
 {
@@ -73,7 +74,20 @@ class InvoiceController extends Controller
         $allServices = array_unique($allServices);
         sort($allServices);
 
-        return view('invoices.index', compact('children', 'currentMonth', 'currentYear', 'totalPaid', 'totalUnpaid', 'allServices'));
+        // Paginate: 6 cards per page
+        $currentPage = request('page', 1);
+        $perPage = 6;
+        $totalFiltered = count($children);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedChildren = new LengthAwarePaginator(
+            $children->slice($offset, $perPage),
+            $totalFiltered,
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return view('invoices.index', compact('children', 'paginatedChildren', 'currentMonth', 'currentYear', 'totalPaid', 'totalUnpaid', 'allServices'));
     }
 
     public function generate(Request $request, Child $child)
@@ -204,7 +218,7 @@ class InvoiceController extends Controller
         // Create income records for each service
         $this->createIncomeForChild($child, $payment, $month, $year);
 
-        return redirect()->route('invoices.index')->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai LUNAS.");
+        return redirect()->back()->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai LUNAS.");
     }
 
     public function markUnpaid(Request $request, Child $child)
@@ -228,10 +242,10 @@ class InvoiceController extends Controller
                 ->whereYear('date', $year)
                 ->delete();
 
-            return redirect()->route('invoices.index')->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai BELUM BAYAR.");
+            return redirect()->back()->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai BELUM BAYAR.");
         }
 
-        return redirect()->route('invoices.index')->with('error', 'Data tagihan tidak ditemukan.');
+        return redirect()->back()->with('error', 'Data tagihan tidak ditemukan.');
     }
 
     private function createIncomeForChild(Child $child, InvoicePayment $payment, int $month, int $year): void
@@ -290,9 +304,25 @@ class InvoiceController extends Controller
                     'child_id' => $child->id,
                     'income_category_id' => $category->id,
                     'date' => $date,
-                    'amount' => (float) config('settings.school_fee', 1000000),
+                    'amount' => (float) $child->spp_fee,
                     'wallet_id' => $defaultWallet->id,
                     'notes' => "Pembayaran SPP - {$child->name} bulan {$month}/{$year}",
+                ]);
+            }
+        }
+
+        // Create parent support income if enabled
+        if ($child->has_parent_support) {
+            $hasService = true;
+            $category = \App\Models\IncomeCategory::where('name', 'Parent Support')->first();
+            if ($category) {
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $category->id,
+                    'date' => $date,
+                    'amount' => (float) config('settings.parent_support_fee', 25000),
+                    'wallet_id' => $defaultWallet->id,
+                    'notes' => "Pembayaran Parent Support - {$child->name} bulan {$month}/{$year}",
                 ]);
             }
         }

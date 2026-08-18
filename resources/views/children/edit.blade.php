@@ -12,7 +12,7 @@
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8">
-        <form action="{{ route('children.update', $child) }}" method="POST" class="space-y-6" id="childForm">
+        <form action="{{ request()->fullUrlWithQuery(array_merge(request()->query(), ['page' => request('page', 1)])) }}" method="POST" class="space-y-6" id="childForm">
             @csrf @method('PUT')
 
             <!-- Basic Info -->

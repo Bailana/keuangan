@@ -734,7 +734,8 @@ function openEditModal(child) {
     document.body.style.overflow = 'hidden';
 
     // Populate form
-    document.getElementById('editForm').action = `/children/${child.id}`;
+    const currentQuery = new URLSearchParams(window.location.search).toString();
+    document.getElementById('editForm').action = `/children/${child.id}${currentQuery ? '?' + currentQuery : ''}`;
     document.getElementById('edit_name').value = child.name;
     document.getElementById('edit_class_name').value = child.class_name || '';
     document.getElementById('edit_parent_name').value = child.parent_name || '';

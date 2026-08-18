@@ -66,7 +66,7 @@ class CashFlowController extends Controller
             });
         }
         $incomePerPage = (int) max(5, min(100, request('income_per_page', 15)));
-        $incomes = $incomeQuery->latest('date')->paginate($incomePerPage);
+        $incomes = $incomeQuery->latest()->paginate($incomePerPage);
         $totalIncome = $incomeQuery->sum('amount');
 
         // Expense query
@@ -94,7 +94,7 @@ class CashFlowController extends Controller
             });
         }
         $expensePerPage = (int) max(5, min(100, request('expense_per_page', 15)));
-        $expenses = $expenseQuery->latest('date')->paginate($expensePerPage);
+        $expenses = $expenseQuery->latest()->paginate($expensePerPage);
         $totalExpense = $expenseQuery->sum('amount');
 
         $selectedWallet = request('wallet_id') ? $wallets->firstWhere('id', request('wallet_id')) : null;

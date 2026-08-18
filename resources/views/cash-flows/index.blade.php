@@ -301,7 +301,6 @@
                 <thead class="bg-emerald-50/50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Anak</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden md:table-cell">Kategori</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Jumlah</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden xl:table-cell">Dompet</th>
@@ -317,14 +316,6 @@
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="font-medium">{{ $income->date->format('d M') }}</div>
                             <div class="text-xs text-gray-500">{{ $income->date->format('Y') }}</div>
-                        </td>
-                        <td class="px-4 py-4 text-sm">
-                            @if($income->child)
-                                <div class="font-medium text-gray-900">{{ $income->child->name }}</div>
-                                <div class="text-xs text-gray-500">{{ ucfirst($income->child->service) }}@if($income->child->class_name) {{ $income->child->class_name }}@endif</div>
-                            @else
-                                <span class="text-gray-500">Umum</span>
-                            @endif
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
@@ -559,7 +550,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Jumlah (Rp) <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Rp</span>
-                        <input type="number" name="amount" required min="0" step="100" value="{{ old('amount') }}" class="w-full rounded-xl border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 pl-8 pr-4 py-2.5 text-sm transition-all">
+                        <input type="number" name="amount" required min="0" value="{{ old('amount') }}" class="w-full rounded-xl border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 pl-8 pr-4 py-2.5 text-sm transition-all">
                     </div>
                 </div>
             </div>
@@ -610,7 +601,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Jumlah (Rp) <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Rp</span>
-                        <input type="number" name="amount" id="expenseAmount" required min="0" step="100" value="{{ old('amount') }}" class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 pl-8 pr-4 py-2.5 text-sm transition-all">
+                        <input type="number" name="amount" id="expenseAmount" required min="0" value="{{ old('amount') }}" class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 pl-8 pr-4 py-2.5 text-sm transition-all">
                     </div>
                 </div>
             </div>
