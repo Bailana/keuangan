@@ -346,6 +346,7 @@
                                 </a>
                                 <form action="{{ route('incomes.destroy', $income) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
                                     @csrf @method('DELETE')
+                                    <input type="hidden" name="wallet_id" value="{{ request('wallet_id') }}">
                                     <button type="submit" class="p-1.5 text-red-600 hover:bg-red-50/50 rounded-lg transition-colors" title="Hapus">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
@@ -463,6 +464,7 @@
                                 </a>
                                 <form action="{{ route('expenses.destroy', $expense) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
                                     @csrf @method('DELETE')
+                                    <input type="hidden" name="wallet_id" value="{{ request('wallet_id') }}">
                                     <button type="submit" class="p-1.5 text-red-600 hover:bg-red-50/50 rounded-lg transition-colors" title="Hapus">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
@@ -512,6 +514,7 @@
         </div>
         <form action="{{ route('incomes.store') }}" method="POST" class="p-6 space-y-4">
             @csrf
+            <input type="hidden" name="wallet_id" value="{{ request('wallet_id') }}">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Kategori <span class="text-red-500">*</span></label>
                 <select name="income_category_id" id="incomeCategoryId" required
@@ -584,6 +587,7 @@
         </div>
         <form action="{{ route('expenses.store') }}" method="POST" class="p-6 space-y-4" id="expenseForm" enctype="multipart/form-data">
             @csrf
+            <input type="hidden" name="wallet_id" value="{{ request('wallet_id') }}">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Judul Pengeluaran <span class="text-red-500">*</span></label>
                 <input type="text" name="title" value="{{ old('title') }}" required placeholder="Contoh: Pembelian alat tulis" class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all">
@@ -652,6 +656,7 @@
         <form id="editIncomeForm" method="POST" class="p-6 space-y-4">
             @csrf
             @method('PUT')
+            <input type="hidden" name="wallet_id" id="editIncomeWalletIdHidden" value="{{ request('wallet_id') }}">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Kategori <span class="text-red-500">*</span></label>
                 <select name="income_category_id" id="editIncomeCategoryId" required
@@ -711,6 +716,7 @@
         <form id="editExpenseForm" method="POST" class="p-6 space-y-4">
             @csrf
             @method('PUT')
+            <input type="hidden" name="wallet_id" id="editExpenseWalletIdHidden" value="{{ request('wallet_id') }}">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Judul Pengeluaran <span class="text-red-500">*</span></label>
                 <input type="text" name="title" id="editExpenseTitle" required class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 px-4 py-2.5 text-sm transition-all">
@@ -848,6 +854,13 @@ function openEditIncomeModal(id) {
             // Set form action
             document.getElementById('editIncomeForm').action = '{{ url('/') }}/incomes/' + id;
 
+            // Preserve wallet_id filter
+            const currentWalletId = '{{ request('wallet_id') }}';
+            const editIncomeWalletHidden = document.getElementById('editIncomeWalletIdHidden');
+            if (editIncomeWalletHidden) editIncomeWalletHidden.value = currentWalletId;
+            const editIncomeWalletSelect = document.getElementById('editWalletId');
+            if (editIncomeWalletSelect && currentWalletId) editIncomeWalletSelect.value = currentWalletId;
+
             // Reset child field visibility
             const catValue = parseInt(catSelect.value);
             const categories = JSON.parse(catSelect.dataset.categories);
@@ -904,6 +917,13 @@ function openEditExpenseModal(id) {
 
             // Set form action
             document.getElementById('editExpenseForm').action = '{{ url('/') }}/expenses/' + id;
+
+            // Preserve wallet_id filter
+            const currentWalletId = '{{ request('wallet_id') }}';
+            const editExpenseWalletHidden = document.getElementById('editExpenseWalletIdHidden');
+            if (editExpenseWalletHidden) editExpenseWalletHidden.value = currentWalletId;
+            const editExpenseWalletSelect = document.getElementById('editExpenseWalletId');
+            if (editExpenseWalletSelect && currentWalletId) editExpenseWalletSelect.value = currentWalletId;
 
             openModal('editExpenseModal');
         })

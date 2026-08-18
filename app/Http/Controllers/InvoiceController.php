@@ -340,9 +340,21 @@ class InvoiceController extends Controller
     private function getUnpaidMonths(Child $child): array
     {
         $months = [];
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        // If child was created in current month, don't show previous months as unpaid
+        $childCreatedMonth = (int) $child->created_at?->format('m');
+        $childCreatedYear = (int) $child->created_at?->format('Y');
+        $skipPreviousMonths = ($childCreatedYear === $currentYear && $childCreatedMonth === $currentMonth);
+
         for ($m = 1; $m <= 12; $m++) {
-            $status = $this->getPaymentStatus($child, $m, now()->year);
-            if ($status === 'unpaid' && $m <= now()->month) {
+            // Skip months before child was created
+            if ($skipPreviousMonths && $m < $currentMonth) {
+                continue;
+            }
+            $status = $this->getPaymentStatus($child, $m, $currentYear);
+            if ($status === 'unpaid' && $m <= $currentMonth) {
                 $months[] = $m;
             }
         }

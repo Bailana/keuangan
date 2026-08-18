@@ -8,7 +8,7 @@
 </div>
 
 <!-- Navigation -->
-<nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+<nav class="flex-1 h-full px-3 py-4 space-y-1 overflow-y-auto">
     <div class="mb-1 px-3" x-show="!sidebarCollapsed" x-transition.opacity>
         <p class="text-[10px] font-bold text-slate-400/60 uppercase tracking-widest">Menu</p>
     </div>

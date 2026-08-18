@@ -150,6 +150,28 @@
                 <p class="text-white/70 text-xs mt-1 font-medium">Tagihan Bulan Ini</p>
             </div>
         </div>
+
+        <!-- Total Parent Support -->
+        <div class="relative rounded-2xl overflow-hidden p-5 text-white"
+             style="background: linear-gradient(135deg, rgba(14,165,233,0.85) 0%, rgba(2,132,199,0.90) 50%, rgba(3,105,161,0.95) 100%);
+                    backdrop-filter: blur(24px) saturate(180%);
+                    -webkit-backdrop-filter: blur(24px) saturate(180%);
+                    box-shadow: 0 8px 32px rgba(14,165,233,0.25), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.35);
+                    border: 1px solid rgba(255,255,255,0.3);">
+            <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none"></div>
+            <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-white/75 text-xs font-semibold uppercase tracking-widest">Total Parent Support</p>
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+                         style="background: rgba(255,255,255,0.18); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    </div>
+                </div>
+                <p class="text-2xl font-bold">Rp {{ number_format($totalParentSupport, 0, ',', '.') }}</p>
+                <p class="text-white/70 text-xs mt-1 font-medium">Pendapatan parent support seluruh anak</p>
+            </div>
+        </div>
     </div>
 
     <!-- Filter -->
@@ -475,6 +497,23 @@
                     </div>
                 </div>
 
+                <!-- Parent Support Section -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        Parent Support <span class="text-gray-400 font-normal">(opsional)</span>
+                    </h3>
+                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-200">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="has_parent_support" value="1" id="has_parent_support_create" onchange="calculateEstimate('create')" class="w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                            <div>
+                                <span class="font-medium text-gray-900">Tambahkan Parent Support</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Rp {{ number_format(config('settings.parent_support_fee', 25000), 0, ',', '.') }} / bulan</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Estimate Card -->
                 <div id="estimateCard" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4">
                     <div class="flex items-center justify-between">
@@ -626,6 +665,23 @@
                     </div>
                 </div>
 
+                <!-- Parent Support Section -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        Parent Support <span class="text-gray-400 font-normal">(opsional)</span>
+                    </h3>
+                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-200">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="has_parent_support" value="1" id="has_parent_support_edit" onchange="calculateEstimate('edit')" class="w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                            <div>
+                                <span class="font-medium text-gray-900">Tambahkan Parent Support</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Rp {{ number_format(config('settings.parent_support_fee', 25000), 0, ',', '.') }} / bulan</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Estimate Card -->
                 <div id="editEstimateCard" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4">
                     <div class="flex items-center justify-between">
@@ -688,6 +744,7 @@ function openEditModal(child) {
     document.getElementById('spp_fee_edit').value = child.spp_fee || schoolFee;
     document.getElementById('has_subsidi_edit').checked = child.has_subsidi;
     document.getElementById('subsidi_amount_edit').value = child.subsidi_amount || 0;
+    document.getElementById('has_parent_support_edit').checked = child.has_parent_support || false;
 
     // Toggle sekolah card
     const sekolahToggle = document.querySelector('#editModal input[name="is_sekolah"]');
@@ -983,6 +1040,14 @@ function calculateEstimate(type = 'create') {
     const subsidiInput = modal.querySelector('input[name="subsidi_amount"]');
     const subsidiCheck = modal.querySelector('input[name="has_subsidi"]:checked');
     const subsidi = subsidiCheck?.checked && subsidiInput?.value ? parseFloat(subsidiInput.value) || 0 : 0;
+
+    // Parent Support addition — scope to modal only
+    const parentSupportCheck = modal.querySelector('input[name="has_parent_support"]:checked');
+    const parentSupportFee = {{ config('settings.parent_support_fee', 25000) }};
+    if (parentSupportCheck?.checked) {
+        total += parentSupportFee;
+        breakdown.push(`Parent Support: Rp ${parentSupportFee.toLocaleString('id-ID')}`);
+    }
 
     // Update UI
     const estimateAmount = modal.querySelector('#estimateAmount' + type.charAt(0).toUpperCase() + type.slice(1));

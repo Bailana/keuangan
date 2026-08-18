@@ -157,6 +157,25 @@
                 </div>
             </div>
 
+            <!-- Parent Support Section -->
+            <div>
+                <h2 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    Parent Support <span class="text-gray-400 font-normal">(opsional)</span>
+                </h2>
+                <div class="p-4 bg-sky-50 rounded-xl border border-sky-200">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="has_parent_support" value="1" id="has_parent_support" {{ $child->has_parent_support ? 'checked' : '' }}
+                            class="w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                            onchange="calculateEstimate()">
+                        <div>
+                            <span class="font-medium text-gray-900">Tambahkan Parent Support</span>
+                            <p class="text-xs text-gray-500 mt-0.5">Rp {{ number_format(config('settings.parent_support_fee', 25000), 0, ',', '.') }} / bulan</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <!-- Estimate Card -->
             <div id="estimateCard" class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4" style="display: block;">
                 <div class="flex items-center justify-between">
@@ -246,6 +265,14 @@ function calculateEstimate() {
         const sppPrice = sppInput ? (parseFloat(sppInput.value) || {{ $child->spp_fee ?? config('settings.school_fee', 1000000) }}) : 0;
         total += sppPrice;
         breakdown.push(`SPP Sekolah: Rp ${sppPrice.toLocaleString('id-ID')}`);
+    }
+
+    // Parent Support calculation
+    const parentSupportCheck = document.getElementById('has_parent_support');
+    const parentSupportFee = {{ config('settings.parent_support_fee', 25000) }};
+    if (parentSupportCheck?.checked) {
+        total += parentSupportFee;
+        breakdown.push(`Parent Support: Rp ${parentSupportFee.toLocaleString('id-ID')}`);
     }
 
     // Vocational calculation

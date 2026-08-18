@@ -23,4 +23,16 @@ return [
     */
 
     'default_sessions' => 4,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Parent Support Fee
+    |--------------------------------------------------------------------------
+    |
+    | This value represents the fixed monthly parent support fee charged to
+    | children who have the parent support option enabled.
+    |
+    */
+
+    'parent_support_fee' => env('PARENT_SUPPORT_FEE', 25000),
 ];

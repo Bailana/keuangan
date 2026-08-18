@@ -11,6 +11,7 @@ class Child extends Model
     protected $fillable = [
         'name', 'is_active', 'parent_name', 'parent_whatsapp',
         'class_name', 'spp_fee', 'has_subsidi', 'subsidi_amount',
+        'has_parent_support',
     ];
 
     protected $appends = ['current_invoice_amount', 'is_taking_sekolah', 'therapy_types_data', 'vocational_types_data'];
@@ -18,6 +19,7 @@ class Child extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'has_subsidi' => 'boolean',
+        'has_parent_support' => 'boolean',
         'subsidi_amount' => 'decimal:2',
         'spp_fee' => 'float',
     ];
@@ -159,6 +161,11 @@ class Child extends Model
         $schoolFee = $this->spp_fee ?? config('settings.school_fee', 0);
         if ($this->isTakingSekolah() && $schoolFee > 0) {
             $total += $schoolFee;
+        }
+
+        // Add parent support if enabled
+        if ($this->has_parent_support) {
+            $total += config('settings.parent_support_fee', 25000);
         }
 
         return $total;

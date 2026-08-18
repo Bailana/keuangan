@@ -40,8 +40,6 @@ class ChildController extends Controller
         $totalInvoice = 0;
 
         foreach ($allChildren as $child) {
-            if (!$child->is_active) continue;
-
             $subsidi = $child->getSubsidiAmount();
             $totalSubsidi += $subsidi;
 
@@ -68,9 +66,17 @@ class ChildController extends Controller
         $therapyTypes = TherapyType::all();
         $vocationalTypes = VocationalType::all();
 
+        $parentSupportFee = config('settings.parent_support_fee', 25000);
+        $totalParentSupport = 0;
+        foreach ($allChildren as $child) {
+            if ($child->has_parent_support) {
+                $totalParentSupport += (float) $parentSupportFee;
+            }
+        }
+
         return view('children.index', compact(
             'children', 'therapyTypes', 'vocationalTypes',
-            'totalTerapi', 'totalVokasi', 'totalSekolah', 'totalSubsidi', 'totalInvoice'
+            'totalTerapi', 'totalVokasi', 'totalSekolah', 'totalSubsidi', 'totalInvoice', 'totalParentSupport'
         ));
     }
 
@@ -91,6 +97,7 @@ class ChildController extends Controller
             'spp_fee' => 'nullable|numeric|min:0',
             'has_subsidi' => 'nullable|boolean',
             'subsidi_amount' => 'nullable|numeric|min:0',
+            'has_parent_support' => 'nullable|boolean',
             'therapy_types' => 'nullable|array',
             'therapy_sessions' => 'nullable|array',
             'vocational_types' => 'nullable|array',
@@ -110,6 +117,7 @@ class ChildController extends Controller
             'spp_fee' => $request->spp_fee,
             'has_subsidi' => $validated['has_subsidi'] ?? false,
             'subsidi_amount' => ($validated['has_subsidi'] ?? false) ? ($validated['subsidi_amount'] ?? 0) : null,
+            'has_parent_support' => $validated['has_parent_support'] ?? false,
         ]);
 
         // Attach therapy types
@@ -154,6 +162,7 @@ class ChildController extends Controller
             'spp_fee' => 'nullable|numeric|min:0',
             'has_subsidi' => 'nullable|boolean',
             'subsidi_amount' => 'nullable|numeric|min:0',
+            'has_parent_support' => 'nullable|boolean',
             'therapy_types' => 'nullable|array',
             'therapy_sessions' => 'nullable|array',
             'vocational_types' => 'nullable|array',
@@ -173,6 +182,7 @@ class ChildController extends Controller
             'spp_fee' => $request->spp_fee,
             'has_subsidi' => $validated['has_subsidi'] ?? false,
             'subsidi_amount' => ($validated['has_subsidi'] ?? false) ? ($validated['subsidi_amount'] ?? 0) : null,
+            'has_parent_support' => $validated['has_parent_support'] ?? false,
         ]);
 
         // Sync therapy types
@@ -236,7 +246,6 @@ class ChildController extends Controller
         $totalInvoice = 0;
 
         foreach ($children as $child) {
-            if (!$child->is_active) continue;
             foreach ($child->therapyTypes as $t) {
                 $sessions = $t->pivot->monthly_sessions ?? 0;
                 $totalTerapi += (float) $t->price_per_session * (int) $sessions;

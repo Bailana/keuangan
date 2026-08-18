@@ -123,7 +123,7 @@
     </aside>
 
     <!-- ===== MOBILE SIDEBAR ===== -->
-    <aside class="fixed inset-y-0 left-0 z-50 w-72 lg:hidden"
+    <aside class="fixed inset-y-0 left-0 z-50 w-72 lg:hidden flex flex-col overflow-hidden"
         :style="{
             transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
             transition: 'transform 0.3s ease',
