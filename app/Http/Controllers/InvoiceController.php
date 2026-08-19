@@ -14,8 +14,8 @@ class InvoiceController extends Controller
 {
     public function index()
     {
-        $currentMonth = request('month', now()->month);
-        $currentYear = request('year', now()->year);
+        $currentMonth = (int) request('month', now()->month);
+        $currentYear = (int) request('year', now()->year);
         $statusFilter = request('status');
         $serviceFilter = request('service');
         $search = request('search');
@@ -92,8 +92,8 @@ class InvoiceController extends Controller
 
     public function generate(Request $request, Child $child)
     {
-        $month = $request->query('month', now()->month);
-        $year = $request->query('year', now()->year);
+        $month = (int) $request->query('month', now()->month);
+        $year = (int) $request->query('year', now()->year);
 
         $child = Child::with(['therapyTypes', 'vocationalTypes'])->findOrFail($child->id);
 
@@ -137,8 +137,8 @@ class InvoiceController extends Controller
 
     public function generatePaid(Request $request, Child $child)
     {
-        $month = $request->query('month', now()->month);
-        $year = $request->query('year', now()->year);
+        $month = (int) $request->query('month', now()->month);
+        $year = (int) $request->query('year', now()->year);
 
         $child = Child::with(['therapyTypes', 'vocationalTypes'])->findOrFail($child->id);
 
@@ -179,8 +179,8 @@ class InvoiceController extends Controller
 
     public function whatsapp(Request $request, Child $child)
     {
-        $month = $request->query('month', now()->month);
-        $year = $request->query('year', now()->year);
+        $month = (int) $request->query('month', now()->month);
+        $year = (int) $request->query('year', now()->year);
         $type = $request->query('type', 'unpaid');
 
         $child = Child::with(['therapyTypes', 'vocationalTypes'])->findOrFail($child->id);
@@ -204,8 +204,8 @@ class InvoiceController extends Controller
 
     public function markPaid(Request $request, Child $child)
     {
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
 
         $child = Child::with(['therapyTypes', 'vocationalTypes'])->findOrFail($child->id);
 
@@ -223,8 +223,8 @@ class InvoiceController extends Controller
 
     public function markUnpaid(Request $request, Child $child)
     {
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
 
         $child = Child::findOrFail($child->id);
 
