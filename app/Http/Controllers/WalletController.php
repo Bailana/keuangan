@@ -149,14 +149,12 @@ class WalletController extends Controller
         $income = $incomeRecords->sum('amount');
         $expense = $records->sum('amount');
 
-        // Calculate balance: last known balance + income - expense
-        $prevBalance = WalletBalance::where('wallet_id', $wallet->id)
-            ->where('month', '<', $month->startOfMonth())
-            ->max('balance');
-        $currentBalance = ($prevBalance ?? 0) + $income - $expense;
+        // Calculate opening balance using the new method
+        $openingBalance = $wallet->getOpeningBalance($month->format('Y-m-d'), $month->copy()->endOfMonth()->format('Y-m-d'));
+        $currentBalance = $openingBalance + $income - $expense;
 
         return view('wallets.statement', compact(
-            'wallet', 'records', 'incomeRecords', 'income', 'expense', 'currentBalance', 'month'
+            'wallet', 'records', 'incomeRecords', 'income', 'expense', 'openingBalance', 'currentBalance', 'month'
         ));
     }
 
@@ -170,10 +168,61 @@ class WalletController extends Controller
         $wallet = Wallet::where('slug', $request->wallet_slug)->firstOrFail();
         $month = Carbon::parse($request->month);
 
-        $records = DB::table('expenses')
+        // Fetch all invoice_payments for this wallet's children this month
+        $invoicePayments = DB::table('invoice_payments')
+            ->select('child_id', 'month', 'year', 'amount', 'notes')
+            ->where('month', $month->month)
+            ->where('year', $month->year)
+            ->whereIn('child_id', function ($q) use ($wallet) {
+                $q->select('child_id')
+                    ->from('incomes')
+                    ->where('wallet_id', $wallet->id);
+            })
+            ->pluck('amount', 'child_id');
+
+        // Income records with child info for subsidi detection
+        $incomeRecords = DB::table('incomes')
+            ->select(
+                'incomes.date',
+                'incomes.amount',
+                'incomes.sender_name',
+                'incomes.notes',
+                'incomes.child_id',
+                'incomes.income_category_id',
+                'income_categories.name as category_name'
+            )
+            ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')
+            ->leftJoin('children', 'incomes.child_id', '=', 'children.id')
+            ->where('incomes.wallet_id', $wallet->id)
+            ->whereYear('incomes.date', $month->year)
+            ->whereMonth('incomes.date', $month->month)
+            ->orderBy('incomes.date')
+            ->get()
+            ->map(function ($r) use ($invoicePayments) {
+                $r->type       = 'income';
+                $r->child_id   = $r->child_id ?? null;
+                $r->child_name = $r->child_name ?? null;
+
+                // Use invoice estimate description for child payments
+                if (!empty($r->child_id) && !empty($r->child_name)) {
+                    $invoiceAmount = $invoicePayments->get($r->child_id);
+                    $r->keterangan = 'Estimasi tagihan bulanan - ' . $r->child_name
+                        . (!empty($invoiceAmount) ? ' (Rp ' . number_format((float)$invoiceAmount, 0, ',', '.') . ')' : '');
+                } else {
+                    $r->keterangan = trim((string)($r->notes ?? '')) !== ''
+                        ? $r->notes
+                        : ($r->sender_name ?? '-');
+                }
+                $r->is_subsidi = !empty($r->child_id) && !empty($r->child_name);
+                return $r;
+            });
+
+        // Expense records
+        $expenseRecords = DB::table('expenses')
             ->select(
                 'expenses.date',
                 'expenses.title',
+                'expenses.notes',
                 'expenses.amount',
                 'expense_categories.name as category_name'
             )
@@ -182,32 +231,53 @@ class WalletController extends Controller
             ->whereYear('expenses.date', $month->year)
             ->whereMonth('expenses.date', $month->month)
             ->orderBy('expenses.date')
-            ->get();
+            ->get()
+            ->map(function ($r) {
+                $r->type       = 'expense';
+                $r->keterangan = trim((string)($r->notes ?? '')) !== ''
+                    ? $r->notes
+                    : ($r->title ?? '-');
+                $r->is_subsidi = str_starts_with($r->title ?? '', 'Diskon Subsidi -');
+                return $r;
+            });
 
-        $incomeRecords = DB::table('incomes')
-            ->select(
-                'incomes.date',
-                'incomes.amount',
-                'incomes.sender_name',
-                'income_categories.name as category_name'
-            )
-            ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')
-            ->where('incomes.wallet_id', $wallet->id)
-            ->whereYear('incomes.date', $month->year)
-            ->whereMonth('incomes.date', $month->month)
-            ->orderBy('incomes.date')
-            ->get();
+        // Merge & sort by date (preserve original order for same-date entries)
+        $allTransactions = $incomeRecords->merge($expenseRecords)
+            ->values()
+            ->sortBy(function ($r) {
+                return [$r->date, $r->type === 'income' ? 0 : 1];
+            }, SORT_ASC, true)
+            ->values();
+
+        // Calculate running balance (set after transaction, not before)
+        $openingBalance = $wallet->getOpeningBalance($month->format('Y-m-d'), $month->copy()->endOfMonth()->format('Y-m-d'));
+        $running = $openingBalance;
+        $allTransactions = $allTransactions->map(function ($r) use (&$running) {
+            if ($r->type === 'income') {
+                $running += (float) $r->amount;
+            } else {
+                $running -= (float) $r->amount;
+            }
+            $r->saldo = $running;
+            return $r;
+        })->values();
 
         $income = $incomeRecords->sum('amount');
-        $expense = $records->sum('amount');
+        $expense = $expenseRecords->sum('amount');
+        $currentBalance = $openingBalance + $income - $expense;
 
-        $prevBalance = WalletBalance::where('wallet_id', $wallet->id)
-            ->where('month', '<', $month->startOfMonth())
-            ->max('balance');
-        $currentBalance = ($prevBalance ?? 0) + $income - $expense;
+        // Total subsidi: sum of expense records created as "Diskon Subsidi"
+        $totalSubsidi = DB::table('expenses')
+            ->where('wallet_id', $wallet->id)
+            ->whereYear('date', $month->year)
+            ->whereMonth('date', $month->month)
+            ->where('title', 'like', 'Diskon Subsidi%')
+            ->sum('amount');
 
         $pdf = Pdf::loadView('wallets.pdf-export', compact(
-            'wallet', 'records', 'incomeRecords', 'income', 'expense', 'currentBalance', 'month'
+            'wallet', 'allTransactions', 'incomeRecords', 'expenseRecords',
+            'income', 'expense', 'openingBalance', 'currentBalance', 'month',
+            'totalSubsidi'
         ));
 
         return $pdf->download('E-Statement-' . $wallet->name . '-' . $month->format('F-Y') . '.pdf');

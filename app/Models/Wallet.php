@@ -40,6 +40,23 @@ class Wallet extends Model
         return $this->initial_balance + $totalIncome - $totalExpense;
     }
 
+    public function getOpeningBalance(string $dateFrom, string $dateTo): float
+    {
+        // Opening balance = initial + income before period - expense before period
+        $startDate = \Carbon\Carbon::parse($dateFrom);
+        $beforeStart = $startDate->copy()->subDay()->format('Y-m-d');
+
+        $incomeBefore = $this->incomes()
+            ->where('date', '<=', $beforeStart)
+            ->sum('amount');
+
+        $expenseBefore = $this->expenses()
+            ->where('date', '<=', $beforeStart)
+            ->sum('amount');
+
+        return $this->initial_balance + $incomeBefore - $expenseBefore;
+    }
+
     public function incomes()
     {
         return $this->hasMany(\App\Models\Income::class, 'wallet_id');

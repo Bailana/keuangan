@@ -242,6 +242,15 @@ class InvoiceController extends Controller
                 ->whereYear('date', $year)
                 ->delete();
 
+            // Delete expense records for this child and month/year
+            \App\Models\Expense::where(function ($q) use ($child) {
+                $q->where('title', 'Diskon Subsidi - ' . $child->name)
+                    ->orWhere('title', 'Parent Support - ' . $child->name);
+            })
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->delete();
+
             return redirect()->back()->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai BELUM BAYAR.");
         }
 
@@ -338,6 +347,22 @@ class InvoiceController extends Controller
                     'amount' => $payment->amount,
                     'wallet_id' => $defaultWallet->id,
                     'notes' => "Pembayaran Invoice - {$child->name} bulan {$month}/{$year}",
+                ]);
+            }
+        }
+
+        // Create expense for subsidi discount so it appears in the arus kas as an expense
+        if ($child->has_subsidi && (float) $child->subsidi_amount > 0) {
+            $subsidiExpenseCategory = \App\Models\ExpenseCategory::where('name', 'Lain-lain')->first();
+            if ($subsidiExpenseCategory) {
+                \App\Models\Expense::create([
+                    'expense_category_id' => $subsidiExpenseCategory->id,
+                    'title' => "Diskon Subsidi - {$child->name}",
+                    'date' => $date,
+                    'amount' => (float) $child->subsidi_amount,
+                    'wallet_id' => $defaultWallet->id,
+                    'recipient' => $child->name,
+                    'notes' => "Potongan subsidi untuk {$child->name} bulan {$month}/{$year}",
                 ]);
             }
         }

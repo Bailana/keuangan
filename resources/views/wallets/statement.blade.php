@@ -66,7 +66,7 @@
         <div class="relative z-10 grid grid-cols-3 gap-4 px-6 py-4 border-b border-gray-200/50">
             <div class="text-center">
                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Saldo Awal</p>
-                <p class="text-sm font-semibold text-gray-900 mt-1">Rp {{ number_format($currentBalance - $income + $expense, 0, ',', '.') }}</p>
+                <p class="text-sm font-semibold text-gray-900 mt-1">Rp {{ number_format($openingBalance ?? 0, 0, ',', '.') }}</p>
             </div>
             <div class="text-center border-x border-gray-200/50">
                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Pemasukan</p>

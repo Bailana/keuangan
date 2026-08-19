@@ -15,13 +15,13 @@ class CashFlowController extends Controller
     public function index()
     {
         $children = Child::all();
-        $incomeCategories = IncomeCategory::whereIn('name', ['SPP', 'Terapi', 'Vokasi', 'Lain-lain'])
-            ->orderByRaw("CASE name
+        $incomeCategories = IncomeCategory::orderByRaw("CASE name
                 WHEN 'SPP' THEN 1
                 WHEN 'Terapi' THEN 2
                 WHEN 'Vokasi' THEN 3
-                WHEN 'Lain-lain' THEN 4
-                ELSE 5
+                WHEN 'Parent Support' THEN 4
+                WHEN 'Lain-lain' THEN 5
+                ELSE 6
             END")
             ->get();
         $expenseCategories = ExpenseCategory::all()
@@ -35,6 +35,24 @@ class CashFlowController extends Controller
             $w->current_balance = $w->getCurrentBalance();
             return $w;
         });
+
+        // Handle month filter — expand to date range
+        if (request('month')) {
+            $monthStart = \Carbon\Carbon::parse(request('month') . '-01')->startOfMonth();
+            request()->merge([
+                'date_from' => $monthStart->format('Y-m-d'),
+                'date_to'   => $monthStart->copy()->endOfMonth()->format('Y-m-d'),
+            ]);
+        }
+
+        // Default to current month if no date filter provided
+        if (!request('date_from') && !request('date_to')) {
+            $now = now();
+            request()->merge([
+                'date_from' => $now->copy()->startOfMonth()->format('Y-m-d'),
+                'date_to'   => $now->copy()->endOfMonth()->format('Y-m-d'),
+            ]);
+        }
 
         // Income query
         $incomeQuery = Income::with(['child', 'category', 'wallet']);
@@ -66,8 +84,8 @@ class CashFlowController extends Controller
             });
         }
         $incomePerPage = (int) max(5, min(100, request('income_per_page', 15)));
-        $incomes = $incomeQuery->latest()->paginate($incomePerPage);
-        $totalIncome = $incomeQuery->sum('amount');
+        $totalIncome = (clone $incomeQuery)->sum('amount');
+        $incomes = $incomeQuery->latest()->paginate($incomePerPage)->appends(request()->except('page'));
 
         // Expense query
         $expenseQuery = Expense::with(['category', 'wallet']);
@@ -94,16 +112,35 @@ class CashFlowController extends Controller
             });
         }
         $expensePerPage = (int) max(5, min(100, request('expense_per_page', 15)));
-        $expenses = $expenseQuery->latest()->paginate($expensePerPage);
-        $totalExpense = $expenseQuery->sum('amount');
+        $totalExpense = (clone $expenseQuery)->sum('amount');
+        $expenses = $expenseQuery->latest()->paginate($expensePerPage)->appends(request()->except('page'));
 
         $selectedWallet = request('wallet_id') ? $wallets->firstWhere('id', request('wallet_id')) : null;
+
+        // Calculate opening balance for selected wallet and date range
+        $openingBalance = 0;
+        if ($selectedWallet && request('date_from')) {
+            $openingBalance = $selectedWallet->getOpeningBalance(request('date_from'), request('date_to'));
+        }
+
+        // Generate month options for filter (last 12 months + current)
+        $monthOptions = [];
+        $now = now();
+        for ($i = 0; $i < 12; $i++) {
+            $m = $now->copy()->subMonths($i);
+            $key = $m->format('Y-m');
+            $label = $m->locale('id')->isoFormat('MMMM YYYY');
+            $monthOptions[$key] = $label;
+        }
+        // Sort descending (newest first)
+        krsort($monthOptions);
 
         return view('cash-flows.index', compact(
             'incomes', 'expenses', 'children',
             'incomeCategories', 'expenseCategories', 'wallets',
             'totalIncome', 'totalExpense', 'selectedWallet',
-            'incomePerPage', 'expensePerPage'
+            'incomePerPage', 'expensePerPage',
+            'monthOptions', 'openingBalance'
         ));
     }
 }

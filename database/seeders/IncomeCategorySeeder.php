@@ -20,6 +20,7 @@ class IncomeCategorySeeder extends Seeder
             ['name' => 'Internet', 'description' => 'Tagihan internet'],
             ['name' => 'Listrik', 'description' => 'Tagihan listrik'],
             ['name' => 'Terapi', 'description' => 'Pembayaran layanan terapi'],
+            ['name' => 'Parent Support', 'description' => 'Biaya tambahan pendampingan orang tua'],
             ['name' => 'Tunjangan', 'description' => 'Tunjangan karyawan'],
         ];
 
