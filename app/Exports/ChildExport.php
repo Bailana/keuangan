@@ -44,13 +44,10 @@ class ChildExport implements FromArray, WithHeadings, WithStyles, WithTitle, Wit
                 $child->class_name ?? '-',
                 $child->spp_fee ? number_format($child->spp_fee, 0, ',', '.') : '-',
                 $child->has_subsidi ? number_format($child->subsidi_amount ?? 0, 0, ',', '.') : '-',
-                implode(', ', $therapyNames) ?: '-',
-                implode(', ', $therapySessions) ?: '-',
+                number_format($child->getTherapyTotal(), 0, ',', '.'),
                 implode(', ', $vokasiNames) ?: '-',
                 implode(', ', $vokasiSessions) ?: '-',
-                number_format($child->calculateGrossAmount(), 0, ',', '.'),
-                number_format($child->getSubsidiAmount(), 0, ',', '.'),
-                number_format($child->getCurrentInvoiceAmount(), 0, ',', '.'),
+                number_format($child->calculateInvoiceAmount(now()->month, now()->year), 0, ',', '.'),
             ];
         })->toArray();
     }
@@ -65,13 +62,10 @@ class ChildExport implements FromArray, WithHeadings, WithStyles, WithTitle, Wit
             'Kelas',
             'SPP Bulanan',
             'Subsidi',
-            'Jenis Terapi',
-            'Sesi Terapi',
+            'Total Terapi',
             'Jenis Vokasi',
             'Sesi Vokasi',
-            'Total Layanan',
-            'Total Subsidi',
-            'Tagihan Bersih',
+            'Tagihan',
         ];
     }
 
@@ -90,13 +84,10 @@ class ChildExport implements FromArray, WithHeadings, WithStyles, WithTitle, Wit
             'E' => 16,
             'F' => 14,
             'G' => 14,
-            'H' => 24,
-            'I' => 12,
-            'J' => 20,
-            'K' => 12,
-            'L' => 14,
-            'M' => 14,
-            'N' => 14,
+            'H' => 18,
+            'I' => 20,
+            'J' => 12,
+            'K' => 14,
         ];
     }
 

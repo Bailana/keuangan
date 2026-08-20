@@ -41,12 +41,21 @@
         <table>
             <thead><tr><th>Kategori</th><th class="text-right">Jumlah</th></tr></thead>
             <tbody>
-                @foreach($incomeByCategory as $item)
+                @php
+                    $incomeOrder = ['Terapi', 'Vokasi', 'SPP', 'Parent Support'];
+                    $incomeFiltered = collect($incomeBreakdown)->filter(fn($v) => $v > 0)->sortBy(function($v, $k) use ($incomeOrder) {
+                        $pos = array_search($k, $incomeOrder);
+                        return $pos === false ? 999 : $pos;
+                    });
+                @endphp
+                @forelse($incomeFiltered as $name => $amount)
                 <tr>
-                    <td>{{ $item->category->name ?? 'Umum' }}</td>
-                    <td class="text-right">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
+                    <td>{{ $name }}</td>
+                    <td class="text-right">Rp {{ number_format($amount, 0, ',', '.') }}</td>
                 </tr>
-                @endforeach
+                @empty
+                <tr><td colspan="2" style="text-align:center;color:#999;">Belum ada data pendapatan</td></tr>
+                @endforelse
                 <tr class="total-row">
                     <td>Total Pendapatan</td>
                     <td class="text-right">Rp {{ number_format($totalIncome, 0, ',', '.') }}</td>
@@ -60,7 +69,15 @@
         <table>
             <thead><tr><th>Kategori</th><th class="text-right">Jumlah</th></tr></thead>
             <tbody>
-                @foreach($expenseByCategory as $item)
+                @php
+                    $expenseOrder = ['Gaji Karyawan', 'SPP', 'Terapi', 'Vokasi', 'Parent Support', 'BPJS Kesehatan', 'BPJS Ketenagakerjaan', 'Inklusi', 'Pulsa & Pascabayar', 'Internet', 'Listrik', 'Tunjangan', 'Lain-lain'];
+                    $expenseOrdered = $expenseByCategory->sortBy(function($item) use ($expenseOrder) {
+                        $name = $item->category->name ?? 'Umum';
+                        $pos = array_search($name, $expenseOrder);
+                        return $pos === false ? 999 : $pos;
+                    });
+                @endphp
+                @foreach($expenseOrdered as $item)
                 <tr>
                     <td>{{ $item->category->name ?? 'Umum' }}</td>
                     <td class="text-right">Rp {{ number_format($item->total, 0, ',', '.') }}</td>

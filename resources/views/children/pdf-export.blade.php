@@ -131,7 +131,12 @@
         .signature-label {
             font-size: 9px;
             color: #6b7280;
-            margin-bottom: 60px;
+            margin-bottom: 35px;
+        }
+        .signature-date {
+            font-size: 9px;
+            color: #6b7280;
+            margin-bottom: 3px;
         }
         .signature-name {
             font-size: 10px;
@@ -225,7 +230,6 @@
                 <th>Subsidi</th>
                 <th>Terapi</th>
                 <th>Vokasi</th>
-                <th>Total Layanan</th>
                 <th>Tagihan</th>
             </tr>
         </thead>
@@ -244,14 +248,13 @@
                 <td>{{ $child->class_name ?? '-' }}</td>
                 <td style="text-align:right">{{ $child->spp_fee ? number_format($child->spp_fee, 0, ',', '.') : '-' }}</td>
                 <td style="text-align:right">{{ $child->has_subsidi && $child->subsidi_amount ? number_format($child->subsidi_amount, 0, ',', '.') : '-' }}</td>
-                <td>{{ $child->getTherapyDetails() }}</td>
+                <td style="text-align:right">Rp {{ number_format($child->getTherapyTotal(), 0, ',', '.') }}</td>
                 <td>{{ $child->getVokasiDetails() }}</td>
-                <td style="text-align:right">Rp {{ number_format($child->calculateGrossAmount(), 0, ',', '.') }}</td>
-                <td style="text-align:right;font-weight:600;color:#6366f1">Rp {{ number_format($child->getCurrentInvoiceAmount(), 0, ',', '.') }}</td>
+                <td style="text-align:right;font-weight:600;color:#6366f1">Rp {{ number_format($child->calculateInvoiceAmount(now()->month, now()->year), 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr class="empty-row">
-                <td colspan="12">Belum ada data anak.</td>
+                <td colspan="11">Belum ada data anak.</td>
             </tr>
             @endforelse
         </tbody>
@@ -261,14 +264,18 @@
     <div class="signature-block">
         <table class="signature-table">
             <tr>
+                <div class="signature-date">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM YYYY') }}</div>
                 <td>
-                    <div class="signature-label">Disusun oleh,</div>
-                    <div class="signature-label" style="margin-top: -50px; margin-bottom: 5px;">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM YYYY') }}</div>
+                    <div style="margin-bottom: 35px;">
+                        <div class="signature-label">Disusun oleh,</div>
+                        
+                    </div>
                     <div class="signature-name">{{ auth()->user()->name ?? 'Admin' }}</div>
                 </td>
                 <td>
-                    <div class="signature-label">Mengetahui / Disetujui,</div>
-                    <div class="signature-label" style="margin-top: -50px; margin-bottom: 5px;"></div>
+                    <div style="margin-bottom: 35px;">
+                        <div class="signature-label">Mengetahui / Disetujui,</div>
+                    </div>
                     <div class="signature-name">(Penanggung Jawab)</div>
                 </td>
             </tr>

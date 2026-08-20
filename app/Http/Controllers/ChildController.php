@@ -278,7 +278,7 @@ class ChildController extends Controller
             'generatedDate' => now()->format('d-m-Y'),
         ]);
 
-        return $pdf->download('Laporan-Data-Anak-' . now()->format('Ymd-His') . '.pdf');
+        return $pdf->setPaper('a4', 'landscape')->download('Laporan-Data-Anak-' . now()->format('Ymd-His') . '.pdf');
     }
 
     public function exportExcel()

@@ -126,6 +126,16 @@ class Child extends Model
         return $details ? implode(', ', $details) : '-';
     }
 
+    public function getTherapyTotal(): float
+    {
+        $total = 0;
+        foreach ($this->therapyTypes as $therapy) {
+            $sessions = $therapy->pivot->monthly_sessions ?? 4;
+            $total += (float) $therapy->price_per_session * (int) $sessions;
+        }
+        return $total;
+    }
+
     public function getVokasiDetails(): string
     {
         $details = [];

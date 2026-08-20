@@ -12,6 +12,9 @@ class ExpenseCategorySeeder extends Seeder
         $categories = [
             ['name' => 'Gaji Karyawan', 'description' => 'Pembayaran gaji karyawan'],
             ['name' => 'SPP', 'description' => 'Pembayaran SPP sekolah'],
+            ['name' => 'Terapi', 'description' => 'Pembayaran layanan terapi'],
+            ['name' => 'Vokasi', 'description' => 'Pembayaran layanan vokasi'],
+            ['name' => 'Parent Support', 'description' => 'Biaya tambahan pendampingan orang tua'],
             ['name' => 'Lain-lain', 'description' => 'Pengeluaran lainnya'],
             ['name' => 'BPJS Kesehatan', 'description' => 'Iuran BPJS Kesehatan'],
             ['name' => 'BPJS Ketenagakerjaan', 'description' => 'Iuran BPJS Ketenagakerjaan'],
@@ -19,8 +22,6 @@ class ExpenseCategorySeeder extends Seeder
             ['name' => 'Pulsa & Pascabayar', 'description' => 'Tagihan pulsa & pascabayar'],
             ['name' => 'Internet', 'description' => 'Tagihan internet'],
             ['name' => 'Listrik', 'description' => 'Tagihan listrik'],
-            ['name' => 'Terapi', 'description' => 'Pembayaran layanan terapi'],
-            ['name' => 'Parent Support', 'description' => 'Biaya tambahan pendampingan orang tua'],
             ['name' => 'Tunjangan', 'description' => 'Tunjangan karyawan'],
         ];
 

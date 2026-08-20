@@ -27,10 +27,73 @@ class ReportController extends Controller
         return $query;
     }
 
+    /**
+     * Parse income notes to extract per-category amounts.
+     * Notes format: "Pembayaran Invoice - Child bulan 8/2024 | Terapi X: 4x Rp 500.000 | SPP: Rp 1.000.000 | Subsidi: -Rp 200.000"
+     *
+     * Income is stored as NET amount (gross - subsidi), so the breakdown must
+     * allocate any subsidy back to the appropriate category:
+     *   - If the child attends school: deduct from SPP
+     *   - Otherwise: deduct from Terapi
+     *
+     * @param  \App\Models\Income|null $record  Needed to resolve child's services
+     */
+    private function parseIncomeBreakdown(string $notes, float $targetAmount = null, ?Income $record = null): array
+    {
+        $patterns = [
+            'Terapi' => '/Terapi\s+[^:]+?:\s*[\d]+x\s*Rp\s*([\d,.]+)/i',
+            'Vokasi' => '/Vokasi\s+[^:]+?:\s*[\d]+x\s*Rp\s*([\d,.]+)/i',
+            'SPP' => '/SPP:\s*Rp\s*([\d,.]+)/i',
+            'Parent Support' => '/Parent Support:\s*Rp\s*([\d,.]+)/i',
+            'Subsidi' => '/Subsidi:\s*[-]?\s*Rp\s*([\d,.]+)/i',
+        ];
+
+        $result = [
+            'Terapi' => 0,
+            'Vokasi' => 0,
+            'SPP' => 0,
+            'Parent Support' => 0,
+            'Lain-lain' => 0,
+        ];
+
+        $subsidiAmt = 0;
+        foreach ($patterns as $cat => $pattern) {
+            preg_match_all($pattern, $notes, $matches);
+            foreach ($matches[1] as $m) {
+                $amount = (float) str_replace(['.', ','], '', $m);
+                if ($cat === 'Subsidi') {
+                    $subsidiAmt += $amount;
+                } else {
+                    $result[$cat] += $amount;
+                }
+            }
+        }
+
+        // Allocate subsidy to the correct category based on child's services
+        if ($subsidiAmt > 0 && $record) {
+            if ($record->child && $record->child->isTakingSekolah()) {
+                $result['SPP'] = max(0, $result['SPP'] - $subsidiAmt);
+            } else {
+                $result['Terapi'] = max(0, $result['Terapi'] - $subsidiAmt);
+            }
+        }
+
+        if ($targetAmount !== null) {
+            $rawSum = array_sum($result);
+            if ($rawSum > 0 && abs($rawSum - $targetAmount) > 0.01) {
+                foreach ($result as $cat => $amt) {
+                    $result[$cat] = ($amt / $rawSum) * $targetAmount;
+                }
+            }
+        }
+
+        return $result;
+    }
+
     public function profitLoss(Request $request)
     {
         $year = $request->input('year', now()->year);
-        $month = $request->input('month');
+        $month = $request->input('month', now()->month);
         $walletId = $request->input('wallet_id');
 
         $months = [];
@@ -46,19 +109,59 @@ class ReportController extends Controller
             $endDate = Carbon::create($year, 12, 31);
         }
 
-        $incomeQuery = $this->applyWalletFilter(
-            Income::selectRaw('income_category_id, SUM(amount) as total')->whereBetween('date', [$startDate, $endDate])->groupBy('income_category_id')->with('category'),
-            $walletId
-        );
         $expenseQuery = $this->applyWalletFilter(
             Expense::selectRaw('expense_category_id, SUM(amount) as total')->whereBetween('date', [$startDate, $endDate])->groupBy('expense_category_id')->with('category'),
             $walletId
         );
 
-        $incomeByCategory = $incomeQuery->get();
+        // Parse income notes to get per-category breakdown
+        $incomeRecords = $this->applyWalletFilter(
+            Income::whereBetween('date', [$startDate, $endDate]),
+            $walletId
+        )->get();
+
+        $incomeBreakdown = [
+            'Terapi' => 0,
+            'Vokasi' => 0,
+            'SPP' => 0,
+            'Parent Support' => 0,
+            'Lain-lain' => 0,
+        ];
+
+        foreach ($incomeRecords as $record) {
+            $notes = $record->notes ?? '';
+            $breakdown = $this->parseIncomeBreakdown($notes, (float) $record->amount, $record);
+
+            // Check if any category was detected from notes
+            $hasBreakdown = false;
+            foreach ($breakdown as $cat => $amount) {
+                if ($amount > 0) {
+                    $hasBreakdown = true;
+                    break;
+                }
+            }
+
+            // Fallback: if no breakdown detected, use the income category
+            if (!$hasBreakdown && $record->category) {
+                $catName = $record->category->name;
+                // Map unknown categories to 'Lain-lain' instead of silently dropping them
+                if (!isset($incomeBreakdown[$catName])) {
+                    $catName = 'Lain-lain';
+                }
+                $incomeBreakdown[$catName] += (float) $record->amount;
+            } else {
+                // Use parsed breakdown
+                foreach ($breakdown as $cat => $amount) {
+                    if (isset($incomeBreakdown[$cat])) {
+                        $incomeBreakdown[$cat] += $amount;
+                    }
+                }
+            }
+        }
+
         $expenseByCategory = $expenseQuery->get();
 
-        $totalIncome = $this->applyWalletFilter(Income::whereBetween('date', [$startDate, $endDate]), $walletId)->sum('amount');
+        $totalIncome = array_sum($incomeBreakdown);
         $totalExpense = $this->applyWalletFilter(Expense::whereBetween('date', [$startDate, $endDate]), $walletId)->sum('amount');
         $netProfit = $totalIncome - $totalExpense;
         $margin = $totalIncome > 0 ? ($netProfit / $totalIncome) * 100 : 0;
@@ -86,7 +189,7 @@ class ReportController extends Controller
         $selectedWallet = $walletId ? $wallets->firstWhere('id', $walletId) : null;
 
         return view('reports.profit-loss', compact(
-            'incomeByCategory', 'expenseByCategory',
+            'incomeBreakdown', 'expenseByCategory',
             'totalIncome', 'totalExpense', 'netProfit', 'margin',
             'months', 'year', 'month', 'monthlyData',
             'wallets', 'selectedWallet', 'walletId'
@@ -107,15 +210,56 @@ class ReportController extends Controller
             $endDate = Carbon::create($year, 12, 31);
         }
 
-        $incomeByCategory = $this->applyWalletFilter(
-            Income::selectRaw('income_category_id, SUM(amount) as total')->whereBetween('date', [$startDate, $endDate])->groupBy('income_category_id')->with('category'),
+        // Parse income notes to get per-category breakdown
+        $incomeRecords = $this->applyWalletFilter(
+            Income::whereBetween('date', [$startDate, $endDate]),
             $walletId
         )->get();
+
+        $incomeBreakdown = [
+            'Terapi' => 0,
+            'Vokasi' => 0,
+            'SPP' => 0,
+            'Parent Support' => 0,
+            'Lain-lain' => 0,
+        ];
+
+        foreach ($incomeRecords as $record) {
+            $notes = $record->notes ?? '';
+            $breakdown = $this->parseIncomeBreakdown($notes, (float) $record->amount, $record);
+
+            // Check if any category was detected from notes
+            $hasBreakdown = false;
+            foreach ($breakdown as $cat => $amount) {
+                if ($amount > 0) {
+                    $hasBreakdown = true;
+                    break;
+                }
+            }
+
+            // Fallback: if no breakdown detected, use the income category
+            if (!$hasBreakdown && $record->category) {
+                $catName = $record->category->name;
+                // Map unknown categories to 'Lain-lain' instead of silently dropping them
+                if (!isset($incomeBreakdown[$catName])) {
+                    $catName = 'Lain-lain';
+                }
+                $incomeBreakdown[$catName] += (float) $record->amount;
+            } else {
+                // Use parsed breakdown
+                foreach ($breakdown as $cat => $amount) {
+                    if (isset($incomeBreakdown[$cat])) {
+                        $incomeBreakdown[$cat] += $amount;
+                    }
+                }
+            }
+        }
+
         $expenseByCategory = $this->applyWalletFilter(
             Expense::selectRaw('expense_category_id, SUM(amount) as total')->whereBetween('date', [$startDate, $endDate])->groupBy('expense_category_id')->with('category'),
             $walletId
         )->get();
-        $totalIncome = $this->applyWalletFilter(Income::whereBetween('date', [$startDate, $endDate]), $walletId)->sum('amount');
+        $totalIncome = array_sum($incomeBreakdown);
         $totalExpense = $this->applyWalletFilter(Expense::whereBetween('date', [$startDate, $endDate]), $walletId)->sum('amount');
         $netProfit = $totalIncome - $totalExpense;
 
@@ -129,12 +273,12 @@ class ReportController extends Controller
         ]);
 
         $pdf = Pdf::loadView('reports.pdf.profit-loss', [
-            'incomeByCategory' => $incomeByCategory,
+            'incomeBreakdown' => $incomeBreakdown,
             'expenseByCategory' => $expenseByCategory,
             'totalIncome' => $totalIncome,
             'totalExpense' => $totalExpense,
-            'netProfit' => $netProfit,
-            'margin' => $totalIncome > 0 ? ($netProfit / $totalIncome) * 100 : 0,
+            'netProfit' => $totalIncome - $totalExpense,
+            'margin' => $totalIncome > 0 ? (($totalIncome - $totalExpense) / $totalIncome) * 100 : 0,
             'period' => $month ? Carbon::create($year, $month, 1)->locale('id')->format('F Y') : 'Tahun ' . $year,
             'wallet' => $walletId ? Wallet::find($walletId) : null,
             'generatedDate' => now()->format('d-m-Y'),

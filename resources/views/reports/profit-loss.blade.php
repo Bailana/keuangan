@@ -61,7 +61,7 @@
                     <select name="month" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
                         <option value="">Semua Bulan</option>
                         @foreach($months as $m => $label)
-                            <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ $label }}</option>
+                            <option value="{{ $m }}" {{ request('month', now()->month) == $m ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -128,13 +128,20 @@
             </div>
             <div class="relative z-10 px-6 py-4">
                 <div class="space-y-3">
-                    @forelse($incomeByCategory as $item)
+                    @php
+                        $incomeOrder = ['Terapi', 'Vokasi', 'SPP', 'Parent Support'];
+                        $incomeFiltered = collect($incomeBreakdown)->filter(fn($v) => $v > 0)->sortBy(function($v, $k) use ($incomeOrder) {
+                            $pos = array_search($k, $incomeOrder);
+                            return $pos === false ? 999 : $pos;
+                        });
+                    @endphp
+                    @forelse($incomeFiltered as $name => $amount)
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span class="text-sm text-gray-700">{{ $item->category->name ?? 'Umum' }}</span>
+                            <span class="text-sm text-gray-700">{{ $name }}</span>
                         </div>
-                        <span class="text-sm font-semibold text-emerald-600">Rp {{ number_format($item->total, 0, ',', '.') }}</span>
+                        <span class="text-sm font-semibold text-emerald-600">Rp {{ number_format($amount, 0, ',', '.') }}</span>
                     </div>
                     @empty
                     <p class="text-sm text-gray-400 text-center py-4">Belum ada data pendapatan</p>

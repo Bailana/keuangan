@@ -263,21 +263,56 @@ class InvoiceController extends Controller
             ->whereYear('date', $year)
             ->delete();
 
-        // Get the invoice note (can include services breakdown if set manually)
-        $invoiceNote = trim((string)($payment->notes ?? '')) !== ''
-            ? $payment->notes
-            : "Pembayaran Invoice - {$child->name} bulan {$month}/{$year}";
+        // Build service list for this child
+        $services = [];
+        foreach ($child->therapyTypes as $therapy) {
+            $services[] = 'Terapi';
+        }
+        foreach ($child->vocationalTypes as $vokasi) {
+            $services[] = 'Vokasi';
+        }
+        if ($child->isTakingSekolah()) $services[] = 'SPP';
+        if ($child->has_parent_support) $services[] = 'Parent Support';
 
-        // Single income record: net amount paid by parent (gross - subsidi)
-        $invoiceCategory = \App\Models\IncomeCategory::where('name', 'SPP')->first();
-        if ($invoiceCategory) {
+        // Determine primary category for the income record
+        $primaryCategory = \App\Models\IncomeCategory::where('name', 'SPP')->first();
+        if (!$primaryCategory) $primaryCategory = \App\Models\IncomeCategory::where('name', 'Terapi')->first();
+        if (!$primaryCategory) $primaryCategory = \App\Models\IncomeCategory::where('name', 'Vokasi')->first();
+
+        // Build detailed notes with all services and amounts
+        $noteParts = ["Pembayaran Invoice - {$child->name} bulan {$month}/{$year}"];
+        foreach ($child->therapyTypes as $therapy) {
+            $sessions = $therapy->pivot->monthly_sessions ?? 4;
+            $amount = (float) $therapy->price_per_session * (int) $sessions;
+            $noteParts[] = "Terapi {$therapy->name}: {$sessions}x Rp " . number_format($amount, 0, ',', '.');
+        }
+        foreach ($child->vocationalTypes as $vokasi) {
+            $sessions = $vokasi->pivot->monthly_sessions ?? 4;
+            $amount = (float) $vokasi->price_per_session * (int) $sessions;
+            $noteParts[] = "Vokasi {$vokasi->name}: {$sessions}x Rp " . number_format($amount, 0, ',', '.');
+        }
+        if ($child->isTakingSekolah() && $child->spp_fee > 0) {
+            $noteParts[] = "SPP: Rp " . number_format((float) $child->spp_fee, 0, ',', '.');
+        }
+        if ($child->has_parent_support) {
+            $parentSupportFee = (float) config('settings.parent_support_fee', 25000);
+            $noteParts[] = "Parent Support: Rp " . number_format($parentSupportFee, 0, ',', '.');
+        }
+        if ($child->has_subsidi && (float) $child->subsidi_amount > 0) {
+            $noteParts[] = "Subsidi: -Rp " . number_format((float) $child->subsidi_amount, 0, ',', '.');
+        }
+
+        $notes = implode(' | ', $noteParts);
+
+        // Create single income record with net amount (gross - subsidi)
+        if ($primaryCategory) {
             \App\Models\Income::create([
                 'child_id' => $child->id,
-                'income_category_id' => $invoiceCategory->id,
+                'income_category_id' => $primaryCategory->id,
                 'date' => $date,
                 'amount' => (float) $payment->amount,
                 'wallet_id' => $defaultWallet->id,
-                'notes' => $invoiceNote,
+                'notes' => $notes,
             ]);
         }
     }
