@@ -242,15 +242,6 @@ class InvoiceController extends Controller
                 ->whereYear('date', $year)
                 ->delete();
 
-            // Delete expense records for this child and month/year
-            \App\Models\Expense::where(function ($q) use ($child) {
-                $q->where('title', 'Diskon Subsidi - ' . $child->name)
-                    ->orWhere('title', 'Parent Support - ' . $child->name);
-            })
-                ->whereMonth('date', $month)
-                ->whereYear('date', $year)
-                ->delete();
-
             return redirect()->back()->with('success', "Pembayaran {$child->name} bulan {$month}/{$year} ditandai BELUM BAYAR.");
         }
 
@@ -266,105 +257,28 @@ class InvoiceController extends Controller
 
         $date = now()->format('Y-m-d');
 
-        // Delete existing incomes for this child/month/year first
+        // Delete all existing incomes for this child/month/year
         \App\Models\Income::where('child_id', $child->id)
             ->whereMonth('date', $month)
             ->whereYear('date', $year)
             ->delete();
 
-        // Create income for each service
-        $hasService = false;
+        // Get the invoice note (can include services breakdown if set manually)
+        $invoiceNote = trim((string)($payment->notes ?? '')) !== ''
+            ? $payment->notes
+            : "Pembayaran Invoice - {$child->name} bulan {$month}/{$year}";
 
-        foreach ($child->therapyTypes as $therapy) {
-            $hasService = true;
-            $category = \App\Models\IncomeCategory::where('name', 'Terapi')->first();
-            if ($category) {
-                \App\Models\Income::create([
-                    'child_id' => $child->id,
-                    'income_category_id' => $category->id,
-                    'date' => $date,
-                    'amount' => (float) $therapy->pivot->monthly_sessions * (float) $therapy->price_per_session,
-                    'wallet_id' => $defaultWallet->id,
-                    'notes' => "Pembayaran Terapi {$therapy->name} - {$child->name} bulan {$month}/{$year}",
-                ]);
-            }
-        }
-
-        foreach ($child->vocationalTypes as $vokasi) {
-            $hasService = true;
-            $category = \App\Models\IncomeCategory::where('name', 'Vokasi')->first();
-            if ($category) {
-                \App\Models\Income::create([
-                    'child_id' => $child->id,
-                    'income_category_id' => $category->id,
-                    'date' => $date,
-                    'amount' => (float) $vokasi->pivot->monthly_sessions * (float) $vokasi->price_per_session,
-                    'wallet_id' => $defaultWallet->id,
-                    'notes' => "Pembayaran Vokasi {$vokasi->name} - {$child->name} bulan {$month}/{$year}",
-                ]);
-            }
-        }
-
-        if ($child->isTakingSekolah()) {
-            $hasService = true;
-            $category = \App\Models\IncomeCategory::where('name', 'SPP')->first();
-            if ($category) {
-                \App\Models\Income::create([
-                    'child_id' => $child->id,
-                    'income_category_id' => $category->id,
-                    'date' => $date,
-                    'amount' => (float) $child->spp_fee,
-                    'wallet_id' => $defaultWallet->id,
-                    'notes' => "Pembayaran SPP - {$child->name} bulan {$month}/{$year}",
-                ]);
-            }
-        }
-
-        // Create parent support income if enabled
-        if ($child->has_parent_support) {
-            $hasService = true;
-            $category = \App\Models\IncomeCategory::where('name', 'Parent Support')->first();
-            if ($category) {
-                \App\Models\Income::create([
-                    'child_id' => $child->id,
-                    'income_category_id' => $category->id,
-                    'date' => $date,
-                    'amount' => (float) config('settings.parent_support_fee', 25000),
-                    'wallet_id' => $defaultWallet->id,
-                    'notes' => "Pembayaran Parent Support - {$child->name} bulan {$month}/{$year}",
-                ]);
-            }
-        }
-
-        // If no specific service, create general invoice income
-        if (!$hasService) {
-            $category = \App\Models\IncomeCategory::where('name', 'SPP')->first();
-            if ($category) {
-                \App\Models\Income::create([
-                    'child_id' => $child->id,
-                    'income_category_id' => $category->id,
-                    'date' => $date,
-                    'amount' => $payment->amount,
-                    'wallet_id' => $defaultWallet->id,
-                    'notes' => "Pembayaran Invoice - {$child->name} bulan {$month}/{$year}",
-                ]);
-            }
-        }
-
-        // Create expense for subsidi discount so it appears in the arus kas as an expense
-        if ($child->has_subsidi && (float) $child->subsidi_amount > 0) {
-            $subsidiExpenseCategory = \App\Models\ExpenseCategory::where('name', 'Lain-lain')->first();
-            if ($subsidiExpenseCategory) {
-                \App\Models\Expense::create([
-                    'expense_category_id' => $subsidiExpenseCategory->id,
-                    'title' => "Diskon Subsidi - {$child->name}",
-                    'date' => $date,
-                    'amount' => (float) $child->subsidi_amount,
-                    'wallet_id' => $defaultWallet->id,
-                    'recipient' => $child->name,
-                    'notes' => "Potongan subsidi untuk {$child->name} bulan {$month}/{$year}",
-                ]);
-            }
+        // Single income record: net amount paid by parent (gross - subsidi)
+        $invoiceCategory = \App\Models\IncomeCategory::where('name', 'SPP')->first();
+        if ($invoiceCategory) {
+            \App\Models\Income::create([
+                'child_id' => $child->id,
+                'income_category_id' => $invoiceCategory->id,
+                'date' => $date,
+                'amount' => (float) $payment->amount,
+                'wallet_id' => $defaultWallet->id,
+                'notes' => $invoiceNote,
+            ]);
         }
     }
 

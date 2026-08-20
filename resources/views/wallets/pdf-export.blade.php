@@ -155,27 +155,6 @@
         .balance-card.expense .card-value   { color: #b91c1c; }
         .balance-card.end .card-value       { color: #7e22ce; }
 
-        /* Total Subsidi box */
-        .total-subsidi-box {
-            margin: 0 0 10px;
-            padding: 6px 20px;
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
-            border-radius: 3px;
-            font-size: 8px;
-            font-weight: 600;
-            color: #92400e;
-            display: table;
-            width: 100%;
-        }
-        .total-subsidi-label {
-            display: table-cell;
-        }
-        .total-subsidi-value {
-            display: table-cell;
-            text-align: right;
-        }
-
         /* === TABLE === */
         .table-section { margin: 0 0 10px; }
         .table-title {
@@ -336,14 +315,6 @@
             <div class="card-value">Rp {{ number_format($currentBalance, 0, ',', '.') }}</div>
         </div>
     </div>
-
-    <!-- Total Subsidi -->
-    @if($totalSubsidi > 0)
-    <div class="total-subsidi-box">
-        <span class="total-subsidi-label">Total Subsidi yang Diberikan</span>
-        <span class="total-subsidi-value">Rp {{ number_format($totalSubsidi, 0, ',', '.') }}</span>
-    </div>
-    @endif
 
     <!-- === TRANSACTION TABLE === -->
     @if(count($allTransactions) > 0)

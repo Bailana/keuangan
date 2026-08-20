@@ -143,7 +143,15 @@
                     <td>{{ $no++ }}</td>
                     <td>Sekolah</td>
                     <td>SPP Bulanan (Kelas {{ $child->class_name ?? '-' }})</td>
-                    <td>Rp {{ number_format(config('settings.school_fee', 1000000), 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format((float)$child->spp_fee, 0, ',', '.') }}</td>
+                </tr>
+                @endif
+                @if($child->has_parent_support)
+                <tr>
+                    <td>{{ $no++ }}</td>
+                    <td>Parent Support</td>
+                    <td>Pendampingan orang tua</td>
+                    <td>Rp {{ number_format((float)config('settings.parent_support_fee', 25000), 0, ',', '.') }}</td>
                 </tr>
                 @endif
                 @if($child->has_subsidi && $child->subsidi_amount > 0)

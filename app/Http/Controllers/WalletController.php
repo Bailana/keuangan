@@ -189,7 +189,8 @@ class WalletController extends Controller
                 'incomes.notes',
                 'incomes.child_id',
                 'incomes.income_category_id',
-                'income_categories.name as category_name'
+                'income_categories.name as category_name',
+                'children.has_subsidi'
             )
             ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')
             ->leftJoin('children', 'incomes.child_id', '=', 'children.id')
@@ -204,16 +205,16 @@ class WalletController extends Controller
                 $r->child_name = $r->child_name ?? null;
 
                 // Use invoice estimate description for child payments
-                if (!empty($r->child_id) && !empty($r->child_name)) {
+                if (!empty($r->child_id)) {
                     $invoiceAmount = $invoicePayments->get($r->child_id);
-                    $r->keterangan = 'Estimasi tagihan bulanan - ' . $r->child_name
+                    $r->keterangan = 'Estimasi tagihan bulanan - ' . ($r->child_name ?? 'Anak')
                         . (!empty($invoiceAmount) ? ' (Rp ' . number_format((float)$invoiceAmount, 0, ',', '.') . ')' : '');
                 } else {
                     $r->keterangan = trim((string)($r->notes ?? '')) !== ''
                         ? $r->notes
                         : ($r->sender_name ?? '-');
                 }
-                $r->is_subsidi = !empty($r->child_id) && !empty($r->child_name);
+                $r->is_subsidi = (bool) $r->has_subsidi;
                 return $r;
             });
 
@@ -266,18 +267,9 @@ class WalletController extends Controller
         $expense = $expenseRecords->sum('amount');
         $currentBalance = $openingBalance + $income - $expense;
 
-        // Total subsidi: sum of expense records created as "Diskon Subsidi"
-        $totalSubsidi = DB::table('expenses')
-            ->where('wallet_id', $wallet->id)
-            ->whereYear('date', $month->year)
-            ->whereMonth('date', $month->month)
-            ->where('title', 'like', 'Diskon Subsidi%')
-            ->sum('amount');
-
         $pdf = Pdf::loadView('wallets.pdf-export', compact(
             'wallet', 'allTransactions', 'incomeRecords', 'expenseRecords',
-            'income', 'expense', 'openingBalance', 'currentBalance', 'month',
-            'totalSubsidi'
+            'income', 'expense', 'openingBalance', 'currentBalance', 'month'
         ));
 
         return $pdf->download('E-Statement-' . $wallet->name . '-' . $month->format('F-Y') . '.pdf');
