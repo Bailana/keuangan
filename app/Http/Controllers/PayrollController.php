@@ -32,7 +32,7 @@ class PayrollController extends Controller
         }
 
         $perPage = (int) max(5, min(100, $request->input('per_page', 15)));
-        $records = $query->orderBy('salary_date', 'desc')->paginate($perPage);
+        $records = $query->orderBy('employee_name')->orderBy('salary_date', 'desc')->paginate($perPage);
 
         $stats = [
             'total' => SalaryRecord::count(),
@@ -53,7 +53,7 @@ class PayrollController extends Controller
 
     public function create()
     {
-        $salaryRecords = SalaryRecord::where('paid', false)->orderBy('salary_date', 'desc')->limit(12)->get();
+        $salaryRecords = SalaryRecord::where('paid', false)->orderBy('employee_name')->orderBy('salary_date', 'desc')->limit(12)->get();
         $employees = Employee::where('is_active', true)->orderBy('name')->get();
 
         $currentMonth = now()->month;
@@ -270,7 +270,7 @@ class PayrollController extends Controller
             $query->where('year', $year);
         }
 
-        $salaries = $query->orderBy('salary_date', 'desc')->get();
+        $salaries = $query->orderBy('employee_name')->orderBy('salary_date', 'desc')->get();
 
         return response()->json($salaries);
     }

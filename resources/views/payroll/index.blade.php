@@ -186,6 +186,13 @@
                                     class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs transition-colors">
                                     Bayar
                                 </button>
+                                @else
+                                <form action="{{ route('payroll.markUnpaid', $record) }}" method="POST" class="inline" onsubmit="return confirm('Batalkan pembayaran gaji {{ $record->employee_name }}? Pengeluaran arus kas juga akan dihapus.')">
+                                    @csrf
+                                    <button type="submit" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs transition-colors">
+                                        Batalkan
+                                    </button>
+                                </form>
                                 @endif
                                 <a href="{{ route('payroll.edit', $record) }}"
                                    class="p-1.5 text-blue-600 hover:bg-blue-50/50 rounded-lg transition-colors" title="Edit">
