@@ -11,13 +11,34 @@
             <p class="text-xs sm:text-sm text-gray-500 mt-1">Kelola data penggajian karyawan klinik & sekolah</p>
         </div>
         @if(auth()->check() && auth()->user()->isAdmin())
-        <a href="{{ route('payroll.create') }}"
-           class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30 transition-all active:scale-95">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span class="hidden sm:inline">Tambah Gaji</span>
-        </a>
+        <div class="flex items-center gap-2">
+            <form action="{{ route('payroll.generate') }}" method="POST" onsubmit="return confirm('Generate gaji bulan {{ \Carbon\Carbon::create()->addMonth()->format('F Y') }} dari data bulan ini?')">
+                @csrf
+                <button type="submit"
+                    class="px-4 py-2.5 rounded-xl border border-indigo-300 text-indigo-700 hover:bg-indigo-50 text-sm font-medium transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span class="hidden sm:inline">Generate Bulan Depan</span>
+                </button>
+            </form>
+            <a href="{{ route('payroll.create') }}"
+               class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30 transition-all active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="hidden sm:inline">Tambah Gaji</span>
+            </a>
+        </div>
         @endif
     </div>
+
+    @if($generatedCount > 0)
+    <div class="rounded-2xl p-4 flex items-center gap-3"
+         style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);">
+        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+            <p class="text-sm font-medium text-emerald-800">Data gaji bulan ini otomatis dibuat</p>
+            <p class="text-xs text-emerald-600 mt-0.5">{{ $generatedCount }} record digenerate dari data bulan sebelumnya</p>
+        </div>
+    </div>
+    @endif
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -80,7 +101,7 @@
                         <option value="">Semua Bulan</option>
                         @foreach($months as $m)
                             <option value="{{ $m['month'] }}-{{ $m['year'] }}"
-                                {{ request('month') == $m['month'] . '-' . $m['year'] ? 'selected' : '' }}>
+                                {{ (request('month') == $m['month'] . '-' . $m['year']) || (!request('month') && $m['month'] == $currentMonth && $m['year'] == $currentYear) ? 'selected' : '' }}>
                                 {{ Carbon\Carbon::create($m['year'], $m['month'])->locale('id')->format('F Y') }}
                             </option>
                         @endforeach

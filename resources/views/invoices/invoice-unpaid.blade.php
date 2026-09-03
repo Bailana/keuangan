@@ -33,9 +33,9 @@
 
         /* Items Table */
         .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .items-table th { background: #f7fafc; padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e2e8f0; }
+        .items-table th { background: #fef3c7; padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: #92400e; border-bottom: 2px solid #fde68a; }
         .items-table th:last-child { text-align: right; }
-        .items-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+        .items-table td { padding: 10px; border-bottom: 1px solid #fde68a; font-size: 11px; }
         .items-table td:last-child { text-align: right; font-weight: bold; }
         .items-table tr:last-child td { border-bottom: none; }
 
@@ -66,6 +66,16 @@
             z-index: 0;
         }
         .invoice-container { position: relative; }
+
+        /* Payment Bank Table */
+        .bank-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .bank-table th { background: #fef3c7; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #92400e; border-bottom: 2px solid #fde68a; }
+        .bank-table th:last-child { text-align: right; }
+        .bank-table td { padding: 8px 12px; font-size: 11px; border-bottom: 1px solid #fde68a; }
+        .bank-table td:last-child { text-align: right; font-weight: bold; }
+        .bank-table tr:last-child td { border-bottom: none; }
+        .bank-table .service-label { font-weight: bold; color: #92400e; }
+        .bank-table .acc-number { font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 0.5px; }
 
         /* Footer */
         .invoice-bottom { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 9px; color: #999; }
@@ -109,6 +119,7 @@
         </div>
 
         <!-- Items Table -->
+        <h4 style="font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Rincian Pembayaran</h4>
         <table class="items-table">
             <thead>
                 <tr>
@@ -142,7 +153,7 @@
                 <tr>
                     <td>{{ $no++ }}</td>
                     <td>Sekolah</td>
-                    <td>SPP Bulanan (Kelas {{ $child->class_name ?? '-' }})</td>
+                    <td>SPP Bulanan</td>
                     <td>Rp {{ number_format((float)$child->spp_fee, 0, ',', '.') }}</td>
                 </tr>
                 @endif
@@ -165,12 +176,65 @@
             </tbody>
         </table>
 
+        @php
+            $hasVokasi = $child->isTakingVokasi();
+            $breakdown = $paymentBreakdown ?? [];
+            $hasMultipleServices = $child->isTakingTerapi() && ($child->isTakingSekolah() || $child->isTakingVokasi());
+        @endphp
+
+        @if(count($breakdown) > 1 || $hasMultipleServices)
+        <h4 style="font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Rekening Pembayaran</h4>
+        <table class="bank-table">
+            <thead>
+                <tr>
+                    <th style="width: 28%;">Layanan</th>
+                    <th>Jumlah</th>
+                    <th>Bank</th>
+                    <th>No. Rekening</th>
+                    <th>Atas Nama</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if(isset($breakdown['default']) && count($breakdown) > 1)
+                <tr>
+                    <td class="service-label">Terapi & SPP</td>
+                    <td>Rp {{ number_format($breakdown['default']['amount'], 0, ',', '.') }}</td>
+                    <td>{{ $breakdown['default']['wallet']->name }}</td>
+                    <td class="acc-number">{{ $breakdown['default']['wallet']->account_number }}</td>
+                    <td>{{ $breakdown['default']['wallet']->owner_name ?? '-' }}</td>
+                </tr>
+                @elseif($hasMultipleServices)
+                <tr>
+                    <td class="service-label">Terapi & SPP</td>
+                    <td>Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
+                    <td>{{ $defaultWallet->name }}</td>
+                    <td class="acc-number">{{ $defaultWallet->account_number }}</td>
+                    <td>{{ $defaultWallet->owner_name ?? '-' }}</td>
+                </tr>
+                @endif
+                @if(isset($breakdown['vokasi']))
+                <tr>
+                    <td class="service-label">Vokasi</td>
+                    <td>Rp {{ number_format($breakdown['vokasi']['amount'], 0, ',', '.') }}</td>
+                    <td>{{ $breakdown['vokasi']['wallet']->name }}</td>
+                    <td class="acc-number">{{ $breakdown['vokasi']['wallet']->account_number }}</td>
+                    <td>{{ $breakdown['vokasi']['wallet']->owner_name ?? '-' }}</td>
+                </tr>
+                @endif
+            </tbody>
+        </table>
+        @endif
+
         <!-- Footer with Totals -->
         <div class="invoice-footer">
             <div class="payment-info">
                 <h4>Informasi Pembayaran</h4>
                 <p>Mohon pembayaran dilakukan sebelum tanggal jatuh tempo.</p>
+                @if(count($breakdown) > 1 || $hasMultipleServices)
+                <p>Transfer sesuai nominal masing-masing layanan ke rekening yang tercantum.</p>
+                @else
                 <p>Bukti transfer dapat diserahkan ke admin.</p>
+                @endif
             </div>
             <div class="totals">
                 <table>

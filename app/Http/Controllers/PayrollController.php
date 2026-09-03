@@ -12,13 +12,22 @@ class PayrollController extends Controller
 {
     public function index(Request $request)
     {
+        $this->generateForNextMonth();
+
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
         $query = SalaryRecord::query();
 
         if ($request->filled('month')) {
             $query->where('month', $request->month);
+        } else {
+            $query->where('month', $currentMonth);
         }
         if ($request->filled('year')) {
             $query->where('year', $request->year);
+        } else {
+            $query->where('year', $currentYear);
         }
         if ($request->filled('employee_name')) {
             $query->where('employee_name', 'like', '%' . $request->employee_name . '%');
@@ -48,7 +57,10 @@ class PayrollController extends Controller
             $months[] = ['month' => $date->month, 'year' => $date->year];
         }
 
-        return view('payroll.index', compact('records', 'stats', 'months', 'perPage'));
+        $generatedCount = session('payroll_generated', 0);
+        session()->forget('payroll_generated');
+
+        return view('payroll.index', compact('records', 'stats', 'months', 'perPage', 'generatedCount', 'currentMonth', 'currentYear'));
     }
 
     public function create()
@@ -247,10 +259,82 @@ class PayrollController extends Controller
         return redirect()->route('payroll.index')->with('success', 'Data gaji berhasil dihapus.');
     }
 
-    public function paymentHistory()
+    public function generate()
     {
-        $payments = SalaryPayment::orderBy('paid_at', 'desc')->paginate(20);
-        return view('payroll.history', compact('payments'));
+        $this->generateForNextMonth();
+        return redirect()->route('payroll.index')->with('success', 'Data gaji bulan depan berhasil di-generate.');
+    }
+
+    public function generateForNextMonth()
+    {
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $prevMonth = $currentMonth === 1 ? 12 : $currentMonth - 1;
+        $prevYear = $currentMonth === 1 ? $currentYear - 1 : $currentYear;
+
+        $previousRecords = SalaryRecord::where('month', $prevMonth)
+            ->where('year', $prevYear)
+            ->where('paid', false)
+            ->get();
+
+        $created = 0;
+        foreach ($previousRecords as $record) {
+            $existing = SalaryRecord::where('employee_name', $record->employee_name)
+                ->where('month', $currentMonth)
+                ->where('year', $currentYear)
+                ->first();
+
+            if (!$existing) {
+                SalaryRecord::create([
+                    'employee_name' => $record->employee_name,
+                    'position' => $record->position,
+                    'phone' => $record->phone,
+                    'whatsapp' => $record->whatsapp,
+                    'salary_date' => now()->format('Y-m-d'),
+                    'month' => $currentMonth,
+                    'year' => $currentYear,
+                    'base_salary' => $record->base_salary,
+                    'salary_extra' => $record->salary_extra,
+                    'total_sessions' => $record->total_sessions,
+                    'session_bonus' => $record->session_bonus,
+                    'transport_allowance' => $record->transport_allowance,
+                    'total_compensation' => $record->total_compensation,
+                    'deductions' => $record->deductions,
+                    'net_salary' => $record->net_salary,
+                    'paid' => false,
+                    'paid_at' => null,
+                ]);
+                $created++;
+            }
+        }
+
+        if ($created > 0) {
+            session(['payroll_generated' => $created]);
+        }
+    }
+
+    public function paymentHistory(Request $request)
+    {
+        $query = SalaryPayment::query();
+
+        if ($request->filled('month')) {
+            [$m, $y] = explode('-', $request->month);
+            $query->where('month', (int)$m)->where('year', (int)$y);
+        }
+        if ($request->filled('employee_name')) {
+            $query->where('employee_name', 'like', '%' . $request->employee_name . '%');
+        }
+
+        $payments = $query->orderBy('paid_at', 'desc')->paginate(20);
+
+        $months = [];
+        for ($i = 0; $i < 24; $i++) {
+            $date = now()->subMonths($i);
+            $months[] = ['month' => $date->month, 'year' => $date->year];
+        }
+
+        return view('payroll.history', compact('payments', 'months'));
     }
 
     public function getEmployeeSalaries(Request $request)

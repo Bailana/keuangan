@@ -102,6 +102,7 @@ class InvoiceController extends Controller
         }
 
         $amount = $child->calculateInvoiceAmount($month, $year);
+        $paymentBreakdown = $this->getPaymentBreakdown($child);
 
         $payment = InvoicePayment::firstOrCreate(
             ['child_id' => $child->id, 'month' => $month, 'year' => $year],
@@ -120,9 +121,13 @@ class InvoiceController extends Controller
         $kopSuratPath = public_path('images/kop_surat.png');
         $logoPath = public_path('images/logo_am.png');
 
+        $defaultWallet = \App\Models\Wallet::where('is_default', true)->first();
+
         $pdf = Pdf::loadView('invoices.invoice-unpaid', [
             'child' => $child,
             'payment' => $payment,
+            'paymentBreakdown' => $paymentBreakdown,
+            'defaultWallet' => $defaultWallet,
             'month' => $month,
             'year' => $year,
             'invoiceNumber' => $invoiceNumber,
@@ -143,6 +148,7 @@ class InvoiceController extends Controller
         $child = Child::with(['therapyTypes', 'vocationalTypes'])->findOrFail($child->id);
 
         $amount = $child->calculateInvoiceAmount($month, $year);
+        $paymentBreakdown = $this->getPaymentBreakdown($child);
 
         $payment = InvoicePayment::firstOrCreate(
             ['child_id' => $child->id, 'month' => $month, 'year' => $year],
@@ -161,9 +167,13 @@ class InvoiceController extends Controller
         $kopSuratPath = public_path('images/kop_surat.png');
         $logoPath = public_path('images/logo_am.png');
 
+        $defaultWallet = \App\Models\Wallet::where('is_default', true)->first();
+
         $pdf = Pdf::loadView('invoices.invoice-paid', [
             'child' => $child,
             'payment' => $payment,
+            'paymentBreakdown' => $paymentBreakdown,
+            'defaultWallet' => $defaultWallet,
             'month' => $month,
             'year' => $year,
             'invoiceNumber' => $invoiceNumber,
@@ -175,6 +185,50 @@ class InvoiceController extends Controller
 
         $filename = 'Invoice-Lunas-' . $child->name . '-' . $month . '-' . $year . '.pdf';
         return $pdf->download($filename);
+    }
+
+    private function getPaymentBreakdown(Child $child): array
+    {
+        $defaultWallet = \App\Models\Wallet::where('is_default', true)->first();
+        $vokasiWallet = \App\Models\Wallet::where('account_number', '1080090160269')->first();
+
+        $grossTotal = $child->calculateGrossAmount();
+        $subsidi = (float) $child->getSubsidiAmount();
+        $netTotal = $grossTotal - $subsidi;
+
+        $vokasiGross = 0;
+        foreach ($child->vocationalTypes as $vokasi) {
+            $sessions = $vokasi->pivot->monthly_sessions ?? 4;
+            $vokasiGross += (float) $vokasi->price_per_session * (int) $sessions;
+        }
+
+        $breakdown = [];
+
+        // Calculate vokasi amount
+        if ($vokasiWallet && $vokasiGross > 0 && $grossTotal > 0) {
+            $vokasiNet = round(($vokasiGross / $grossTotal) * $netTotal, 2);
+            $nonVokasiNet = $netTotal - $vokasiNet;
+
+            $breakdown['vokasi'] = [
+                'wallet' => $vokasiWallet,
+                'amount' => $vokasiNet,
+            ];
+
+            if ($defaultWallet && $nonVokasiNet > 0) {
+                $breakdown['default'] = [
+                    'wallet' => $defaultWallet,
+                    'amount' => $nonVokasiNet,
+                ];
+            }
+        } elseif ($defaultWallet && $netTotal > 0) {
+            // No vokasi, all goes to default wallet
+            $breakdown['default'] = [
+                'wallet' => $defaultWallet,
+                'amount' => $netTotal,
+            ];
+        }
+
+        return $breakdown;
     }
 
     public function whatsapp(Request $request, Child $child)
@@ -251,9 +305,7 @@ class InvoiceController extends Controller
     private function createIncomeForChild(Child $child, InvoicePayment $payment, int $month, int $year): void
     {
         $defaultWallet = \App\Models\Wallet::where('is_default', true)->first();
-        if (!$defaultWallet) {
-            return;
-        }
+        $vokasiWallet = \App\Models\Wallet::where('account_number', '1080090160269')->first();
 
         $date = now()->format('Y-m-d');
 
@@ -263,57 +315,83 @@ class InvoiceController extends Controller
             ->whereYear('date', $year)
             ->delete();
 
-        // Build service list for this child
-        $services = [];
-        foreach ($child->therapyTypes as $therapy) {
-            $services[] = 'Terapi';
-        }
-        foreach ($child->vocationalTypes as $vokasi) {
-            $services[] = 'Vokasi';
-        }
-        if ($child->isTakingSekolah()) $services[] = 'SPP';
-        if ($child->has_parent_support) $services[] = 'Parent Support';
+        // Calculate amount breakdown by service type
+        $vokasiAmount = 0;
+        $nonVokasiAmount = (float) $payment->amount;
 
-        // Determine primary category for the income record
-        $primaryCategory = \App\Models\IncomeCategory::where('name', 'SPP')->first();
-        if (!$primaryCategory) $primaryCategory = \App\Models\IncomeCategory::where('name', 'Terapi')->first();
-        if (!$primaryCategory) $primaryCategory = \App\Models\IncomeCategory::where('name', 'Vokasi')->first();
-
-        // Build detailed notes with all services and amounts
-        $noteParts = ["Pembayaran Invoice - {$child->name} bulan {$month}/{$year}"];
-        foreach ($child->therapyTypes as $therapy) {
-            $sessions = $therapy->pivot->monthly_sessions ?? 4;
-            $amount = (float) $therapy->price_per_session * (int) $sessions;
-            $noteParts[] = "Terapi {$therapy->name}: {$sessions}x Rp " . number_format($amount, 0, ',', '.');
-        }
         foreach ($child->vocationalTypes as $vokasi) {
             $sessions = $vokasi->pivot->monthly_sessions ?? 4;
-            $amount = (float) $vokasi->price_per_session * (int) $sessions;
-            $noteParts[] = "Vokasi {$vokasi->name}: {$sessions}x Rp " . number_format($amount, 0, ',', '.');
-        }
-        if ($child->isTakingSekolah() && $child->spp_fee > 0) {
-            $noteParts[] = "SPP: Rp " . number_format((float) $child->spp_fee, 0, ',', '.');
-        }
-        if ($child->has_parent_support) {
-            $parentSupportFee = (float) config('settings.parent_support_fee', 25000);
-            $noteParts[] = "Parent Support: Rp " . number_format($parentSupportFee, 0, ',', '.');
-        }
-        if ($child->has_subsidi && (float) $child->subsidi_amount > 0) {
-            $noteParts[] = "Subsidi: -Rp " . number_format((float) $child->subsidi_amount, 0, ',', '.');
+            $vokasiAmount += (float) $vokasi->price_per_session * (int) $sessions;
         }
 
-        $notes = implode(' | ', $noteParts);
+        $grossTotal = $child->calculateGrossAmount();
+        $subsidi = (float) $child->getSubsidiAmount();
+        $netTotal = $grossTotal - $subsidi;
 
-        // Create single income record with net amount (gross - subsidi)
-        if ($primaryCategory) {
-            \App\Models\Income::create([
-                'child_id' => $child->id,
-                'income_category_id' => $primaryCategory->id,
-                'date' => $date,
-                'amount' => (float) $payment->amount,
-                'wallet_id' => $defaultWallet->id,
-                'notes' => $notes,
-            ]);
+        if ($grossTotal > 0 && $vokasiAmount > 0) {
+            $vokasiNet = round(($vokasiAmount / $grossTotal) * $netTotal, 2);
+            $nonVokasiNet = $netTotal - $vokasiNet;
+        } else {
+            $vokasiNet = $netTotal;
+            $nonVokasiNet = 0;
+        }
+
+        // Build notes
+        $buildNote = function (array $parts) {
+            return implode(' | ', $parts);
+        };
+
+        // Create Vokasi income to Vokasi wallet
+        if ($vokasiWallet && $vokasiNet > 0) {
+            $vokasiCategory = \App\Models\IncomeCategory::where('name', 'Vokasi')->first();
+            if ($vokasiCategory) {
+                $vokasiNoteParts = ["Pembayaran Invoice - {$child->name} bulan {$month}/{$year}"];
+                foreach ($child->vocationalTypes as $vokasi) {
+                    $sessions = $vokasi->pivot->monthly_sessions ?? 4;
+                    $amount = (float) $vokasi->price_per_session * (int) $sessions;
+                    $vokasiNoteParts[] = "Vokasi {$vokasi->name}: {$sessions}x Rp " . number_format($amount, 0, ',', '.');
+                }
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $vokasiCategory->id,
+                    'date' => $date,
+                    'amount' => $vokasiNet,
+                    'wallet_id' => $vokasiWallet->id,
+                    'notes' => $buildNote($vokasiNoteParts),
+                ]);
+            }
+        }
+
+        // Create non-Vokasi income (Terapi, SPP, Parent Support) to default wallet
+        if ($defaultWallet && $nonVokasiNet > 0) {
+            $primaryCategory = \App\Models\IncomeCategory::where('name', 'SPP')->first();
+            if (!$primaryCategory) $primaryCategory = \App\Models\IncomeCategory::where('name', 'Terapi')->first();
+            if ($primaryCategory) {
+                $nonVokasiNoteParts = ["Pembayaran Invoice - {$child->name} bulan {$month}/{$year}"];
+                foreach ($child->therapyTypes as $therapy) {
+                    $sessions = $therapy->pivot->monthly_sessions ?? 4;
+                    $amount = (float) $therapy->price_per_session * (int) $sessions;
+                    $nonVokasiNoteParts[] = "Terapi {$therapy->name}: {$sessions}x Rp " . number_format($amount, 0, ',', '.');
+                }
+                if ($child->isTakingSekolah() && $child->spp_fee > 0) {
+                    $nonVokasiNoteParts[] = "SPP: Rp " . number_format((float) $child->spp_fee, 0, ',', '.');
+                }
+                if ($child->has_parent_support) {
+                    $parentSupportFee = (float) config('settings.parent_support_fee', 25000);
+                    $nonVokasiNoteParts[] = "Parent Support: Rp " . number_format($parentSupportFee, 0, ',', '.');
+                }
+                if ($child->has_subsidi && (float) $child->subsidi_amount > 0) {
+                    $nonVokasiNoteParts[] = "Subsidi: -Rp " . number_format((float) $child->subsidi_amount, 0, ',', '.');
+                }
+                \App\Models\Income::create([
+                    'child_id' => $child->id,
+                    'income_category_id' => $primaryCategory->id,
+                    'date' => $date,
+                    'amount' => $nonVokasiNet,
+                    'wallet_id' => $defaultWallet->id,
+                    'notes' => $buildNote($nonVokasiNoteParts),
+                ]);
+            }
         }
     }
 

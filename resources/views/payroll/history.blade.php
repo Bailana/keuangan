@@ -11,6 +11,47 @@
         </div>
     </div>
 
+    <!-- Filter -->
+    <div class="relative rounded-2xl p-4"
+         style="background: rgba(255,255,255,0.45); backdrop-filter: blur(24px) saturate(180%);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+                border: 1px solid rgba(255,255,255,0.7);">
+        <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-2xl"></div>
+        <div class="relative z-10">
+            <form method="GET" class="flex flex-wrap gap-3 items-end">
+                <div class="w-[200px]">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Bulan Pembayaran</label>
+                    <select name="month" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
+                        <option value="">Semua Bulan</option>
+                        @foreach($months as $m)
+                            <option value="{{ $m['month'] }}-{{ $m['year'] }}"
+                                {{ request('month') == $m['month'] . '-' . $m['year'] ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create($m['year'], $m['month'])->locale('id')->format('F Y') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Cari Karyawan</label>
+                    <input type="text" name="employee_name" value="{{ request('employee_name') }}"
+                        placeholder="Nama karyawan..."
+                        class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white/60">
+                </div>
+                <button type="submit"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.335a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                    Filter
+                </button>
+                @if(request('month') || request('employee_name'))
+                <a href="{{ route('payroll.history') }}"
+                    class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                    Reset
+                </a>
+                @endif
+            </form>
+        </div>
+    </div>
+
     <div class="relative rounded-2xl overflow-hidden"
          style="background: rgba(255,255,255,0.45); backdrop-filter: blur(24px) saturate(180%);
                 box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);

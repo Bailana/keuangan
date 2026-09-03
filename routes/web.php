@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/payroll/employee-salaries', [PayrollController::class, 'getEmployeeSalaries'])->name('payroll.employee-salaries');
     Route::get('/payroll/history/{payment}/pdf', [SlipPDFController::class, 'generate'])->name('payroll.slip.pdf');
     Route::get('/payroll/history/{payment}/whatsapp', [SlipPDFController::class, 'sendWhatsApp'])->name('payroll.slip.whatsapp');
+    Route::post('/payroll/generate', [PayrollController::class, 'generate'])->name('payroll.generate');
 
 
     Route::get('/children', [ChildController::class, 'index'])->name('children');
