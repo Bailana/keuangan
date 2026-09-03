@@ -14,7 +14,7 @@ use App\Http\Controllers\TherapyTypeController;
 use App\Http\Controllers\VocationalTypeController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PayrollController;
-use App\Http\Controllers\SlipPDFController;
+
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserController;
@@ -71,10 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.markPaid');
     Route::post('/payroll/{payroll}/mark-unpaid', [PayrollController::class, 'markUnpaid'])->name('payroll.markUnpaid');
     Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
-    Route::get('/payroll/history', [PayrollController::class, 'paymentHistory'])->name('payroll.history');
     Route::get('/payroll/employee-salaries', [PayrollController::class, 'getEmployeeSalaries'])->name('payroll.employee-salaries');
-    Route::get('/payroll/history/{payment}/pdf', [SlipPDFController::class, 'generate'])->name('payroll.slip.pdf');
-    Route::get('/payroll/history/{payment}/whatsapp', [SlipPDFController::class, 'sendWhatsApp'])->name('payroll.slip.whatsapp');
+    Route::get('/payroll/{payroll}/slip-pdf', [PayrollController::class, 'generateSlip'])->name('payroll.slip-pdf');
     Route::post('/payroll/generate', [PayrollController::class, 'generate'])->name('payroll.generate');
 
 

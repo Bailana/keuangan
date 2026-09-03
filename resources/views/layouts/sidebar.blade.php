@@ -73,38 +73,18 @@
         </div>
     </div>
 
-    <!-- Penggajian (Dropdown) -->
-    <div x-data="{ open: {{ request()->routeIs('payroll.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                       text-slate-300/80 hover:bg-white/10 hover:text-white"
-                :class="sidebarCollapsed ? 'justify-center px-2' : ''"
-                :title="sidebarCollapsed ? 'Penggajian' : ''">
-            <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            </span>
-            <span x-show="!sidebarCollapsed" x-transition.opacity class="flex-1 text-left">Penggajian</span>
-            <svg x-show="!sidebarCollapsed" x-transition class="w-4 h-4 text-slate-400" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div x-show="!sidebarCollapsed && open" x-collapse x-transition>
-            <div class="ml-4 mt-1 space-y-1 border-l-2 border-white/10 pl-3">
-                <a href="{{ route('payroll.index') }}"
-                   onclick="window.location.href='{{ route('payroll.index') }}'; return false;"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
-                          {{ request()->routeIs('payroll.index') || request()->routeIs('payroll.create') || request()->routeIs('payroll.edit') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    Gaji Karyawan
-                </a>
-                <a href="{{ route('payroll.history') }}"
-                   onclick="window.location.href='{{ route('payroll.history') }}'; return false;"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
-                          {{ request()->routeIs('payroll.history') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                    Rekap Slip Gaji
-                </a>
-            </div>
-        </div>
-    </div>
+    <!-- Gaji Karyawan -->
+    <a href="{{ route('payroll.index') }}"
+       onclick="window.location.href='{{ route('payroll.index') }}'; return false;"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
+              {{ request()->routeIs('payroll.*') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
+       :class="sidebarCollapsed ? 'justify-center px-2' : ''"
+       :title="sidebarCollapsed ? 'Gaji Karyawan' : ''">
+        <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </span>
+        <span x-show="!sidebarCollapsed" x-transition.opacity>Gaji Karyawan</span>
+    </a>
 
     <!-- Laporan Keuangan (Dropdown) -->
     <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">

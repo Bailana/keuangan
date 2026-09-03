@@ -7,12 +7,13 @@ use App\Models\SalaryPayment;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PayrollController extends Controller
 {
     public function index(Request $request)
     {
-        $this->generateForNextMonth();
+        $this->generateForCurrentMonth();
 
         $currentMonth = now()->month;
         $currentYear = now()->year;
@@ -20,14 +21,23 @@ class PayrollController extends Controller
         $query = SalaryRecord::query();
 
         if ($request->filled('month')) {
-            $query->where('month', $request->month);
+            // Handle combined month-year format like "9-2026"
+            if (str_contains($request->month, '-')) {
+                [$m, $y] = explode('-', $request->month);
+                $query->where('month', (int)$m)->where('year', (int)$y);
+            } else {
+                $query->where('month', (int)$request->month);
+                if ($request->filled('year')) {
+                    $query->where('year', (int)$request->year);
+                }
+            }
         } else {
-            $query->where('month', $currentMonth);
+            $query->where('month', $currentMonth)->where('year', $currentYear);
         }
-        if ($request->filled('year')) {
-            $query->where('year', $request->year);
-        } else {
-            $query->where('year', $currentYear);
+
+        if (!$request->filled('month') && $request->filled('employee_name')) {
+            // Apply default month/year when only employee name is searched
+            $query->where('month', $currentMonth)->where('year', $currentYear);
         }
         if ($request->filled('employee_name')) {
             $query->where('employee_name', 'like', '%' . $request->employee_name . '%');
@@ -43,12 +53,28 @@ class PayrollController extends Controller
         $perPage = (int) max(5, min(100, $request->input('per_page', 15)));
         $records = $query->orderBy('employee_name')->orderBy('salary_date', 'desc')->paginate($perPage);
 
+        // Build stats based on the same query used for records
+        $statsQuery = SalaryRecord::query();
+        if ($request->filled('month')) {
+            if (str_contains($request->month, '-')) {
+                [$m, $y] = explode('-', $request->month);
+                $statsQuery->where('month', (int)$m)->where('year', (int)$y);
+            } else {
+                $statsQuery->where('month', (int)$request->month);
+                if ($request->filled('year')) {
+                    $statsQuery->where('year', (int)$request->year);
+                }
+            }
+        } else {
+            $statsQuery->where('month', $currentMonth)->where('year', $currentYear);
+        }
+
         $stats = [
-            'total' => SalaryRecord::count(),
-            'paid' => SalaryRecord::where('paid', true)->count(),
-            'unpaid' => SalaryRecord::where('paid', false)->count(),
-            'total_paid' => SalaryRecord::where('paid', true)->sum('net_salary'),
-            'total_unpaid' => SalaryRecord::where('paid', false)->sum('net_salary'),
+            'total' => $statsQuery->count(),
+            'paid' => (clone $statsQuery)->where('paid', true)->count(),
+            'unpaid' => (clone $statsQuery)->where('paid', false)->count(),
+            'total_paid' => (clone $statsQuery)->where('paid', true)->sum('net_salary'),
+            'total_unpaid' => (clone $statsQuery)->where('paid', false)->sum('net_salary'),
         ];
 
         $months = [];
@@ -259,27 +285,26 @@ class PayrollController extends Controller
         return redirect()->route('payroll.index')->with('success', 'Data gaji berhasil dihapus.');
     }
 
-    public function generate()
-    {
-        $this->generateForNextMonth();
-        return redirect()->route('payroll.index')->with('success', 'Data gaji bulan depan berhasil di-generate.');
-    }
-
-    public function generateForNextMonth()
+    private function generateForCurrentMonth()
     {
         $currentMonth = now()->month;
         $currentYear = now()->year;
 
+        // Check if current month already has records
+        $currentExists = SalaryRecord::where('month', $currentMonth)->where('year', $currentYear)->exists();
+
+        if ($currentExists) {
+            return;
+        }
+
+        // Get previous month data
         $prevMonth = $currentMonth === 1 ? 12 : $currentMonth - 1;
         $prevYear = $currentMonth === 1 ? $currentYear - 1 : $currentYear;
 
-        $previousRecords = SalaryRecord::where('month', $prevMonth)
-            ->where('year', $prevYear)
-            ->where('paid', false)
-            ->get();
+        $prevRecords = SalaryRecord::where('month', $prevMonth)->where('year', $prevYear)->get();
 
         $created = 0;
-        foreach ($previousRecords as $record) {
+        foreach ($prevRecords as $record) {
             $existing = SalaryRecord::where('employee_name', $record->employee_name)
                 ->where('month', $currentMonth)
                 ->where('year', $currentYear)
@@ -314,29 +339,6 @@ class PayrollController extends Controller
         }
     }
 
-    public function paymentHistory(Request $request)
-    {
-        $query = SalaryPayment::query();
-
-        if ($request->filled('month')) {
-            [$m, $y] = explode('-', $request->month);
-            $query->where('month', (int)$m)->where('year', (int)$y);
-        }
-        if ($request->filled('employee_name')) {
-            $query->where('employee_name', 'like', '%' . $request->employee_name . '%');
-        }
-
-        $payments = $query->orderBy('paid_at', 'desc')->paginate(20);
-
-        $months = [];
-        for ($i = 0; $i < 24; $i++) {
-            $date = now()->subMonths($i);
-            $months[] = ['month' => $date->month, 'year' => $date->year];
-        }
-
-        return view('payroll.history', compact('payments', 'months'));
-    }
-
     public function getEmployeeSalaries(Request $request)
     {
         $employeeName = $request->input('employee_name');
@@ -357,5 +359,40 @@ class PayrollController extends Controller
         $salaries = $query->orderBy('employee_name')->orderBy('salary_date', 'desc')->get();
 
         return response()->json($salaries);
+    }
+
+    public function generateSlip(SalaryRecord $payroll)
+    {
+        $payment = $payroll->payrollPayments()->first();
+
+        // Jika belum ada SalaryPayment, buat data dummy dari SalaryRecord
+        if (!$payment) {
+            $payment = (object) [
+                'employee_name' => $payroll->employee_name,
+                'position' => $payroll->position,
+                'whatsapp' => $payroll->whatsapp,
+                'month' => $payroll->month,
+                'year' => $payroll->year,
+                'base_salary' => $payroll->base_salary,
+                'salary_extra' => $payroll->salary_extra,
+                'total_sessions' => $payroll->total_sessions,
+                'session_bonus' => $payroll->session_bonus,
+                'transport_allowance' => $payroll->transport_allowance,
+                'total_compensation' => $payroll->total_compensation,
+                'deductions' => $payroll->deductions,
+                'net_salary' => $payroll->net_salary,
+                'paid_at' => $payroll->paid_at,
+            ];
+        }
+
+        $companyName = 'KLINIK TERAPI & SEKOLAH KHUSUS ANAK MANDIRI';
+        $kopSuratPath = public_path('images/kop_surat.png');
+        $logoPath = public_path('images/logo_am.png');
+        $adminName = auth()->user()->name ?? 'Administrator';
+
+        $pdf = Pdf::loadView('payroll.slips.slip', compact('payment', 'companyName', 'kopSuratPath', 'logoPath', 'adminName'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('slip-gaji-' . $payment->employee_name . '-' . $payment->year . '-' . $payment->month . '.pdf');
     }
 }

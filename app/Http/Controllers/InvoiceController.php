@@ -46,7 +46,7 @@ class InvoiceController extends Controller
 
         foreach ($children as $child) {
             $child->payment_status = $this->getPaymentStatus($child, $currentMonth, $currentYear);
-            $child->unpaid_months = $this->getUnpaidMonths($child);
+            $child->unpaid_months = $this->getUnpaidMonths($child, $currentMonth, $currentYear);
             $child->invoice_amount = $child->calculateInvoiceAmount($currentMonth, $currentYear);
 
             if ($child->payment_status === 'paid') {
@@ -419,22 +419,25 @@ class InvoiceController extends Controller
         return $totalIncome >= $invoiceAmount ? 'paid' : 'unpaid';
     }
 
-    private function getUnpaidMonths(Child $child): array
+    private function getUnpaidMonths(Child $child, int $currentMonth, int $currentYear): array
     {
         $months = [];
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
 
-        // If child was created in current month, don't show previous months as unpaid
         $childCreatedMonth = (int) $child->created_at?->format('m');
         $childCreatedYear = (int) $child->created_at?->format('Y');
-        $skipPreviousMonths = ($childCreatedYear === $currentYear && $childCreatedMonth === $currentMonth);
 
         for ($m = 1; $m <= 12; $m++) {
             // Skip months before child was created
-            if ($skipPreviousMonths && $m < $currentMonth) {
+            if ($childCreatedYear > $currentYear) {
                 continue;
             }
+            if ($childCreatedYear === $currentYear && $m < $childCreatedMonth) {
+                continue;
+            }
+            if ($childCreatedYear < $currentYear) {
+                continue;
+            }
+
             $status = $this->getPaymentStatus($child, $m, $currentYear);
             if ($status === 'unpaid' && $m <= $currentMonth) {
                 $months[] = $m;
