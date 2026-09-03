@@ -332,8 +332,8 @@ class InvoiceController extends Controller
             $vokasiNet = round(($vokasiAmount / $grossTotal) * $netTotal, 2);
             $nonVokasiNet = $netTotal - $vokasiNet;
         } else {
-            $vokasiNet = $netTotal;
-            $nonVokasiNet = 0;
+            $vokasiNet = 0;
+            $nonVokasiNet = $netTotal;
         }
 
         // Build notes
