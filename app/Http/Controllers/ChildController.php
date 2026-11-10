@@ -17,8 +17,25 @@ class ChildController extends Controller
     {
         $query = Child::with(['therapyTypes', 'vocationalTypes']);
 
+        $search = request('search');
+        $searchIsAmount = false;
+        $searchAmount = null;
+
         if (request()->filled('search')) {
-            $query->where('name', 'like', '%' . request('search') . '%');
+            $term = trim($search);
+
+            // Jika pencarian berupa angka (boleh dengan pemisah ribuan),
+            // cari berdasarkan nominal tagihan bulan berjalan.
+            $digitOnly = str_replace([',', '.', ' '], '', $term);
+            if (ctype_digit($digitOnly) && $term !== '') {
+                $searchIsAmount = true;
+                $searchAmount = (int) $digitOnly;
+            } else {
+                $query->where(function ($q) use ($term) {
+                    $q->where('name', 'like', '%' . $term . '%')
+                      ->orWhere('parent_name', 'like', '%' . $term . '%');
+                });
+            }
         }
 
         if (request()->filled('category')) {
@@ -61,7 +78,26 @@ class ChildController extends Controller
             $totalInvoice += $invoiceAmount;
         }
 
-        $children = $query->latest()->paginate(6)->withQueryString();
+        $paginated = $query->latest()->paginate(6)->withQueryString();
+
+        // Filter nominal: dihitung di PHP karena tagihan berasal dari
+        // calculateInvoiceAmount(). Filter pada hasil paginated agar
+        // jumlah halaman tetap konsisten dengan total anak.
+        if ($searchIsAmount && $searchAmount !== null) {
+            $filtered = $paginated->getCollection()
+                ->filter(fn ($child) => (int) round($child->getCurrentInvoiceAmount()) === $searchAmount)
+                ->values();
+            $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+                $filtered,
+                $paginated->total(),
+                $paginated->perPage(),
+                $paginated->currentPage(),
+                ['paths' => request()->url(), 'pageName' => 'page']
+            );
+            $paginated->appends(request()->query());
+        }
+
+        $children = $paginated;
 
         $therapyTypes = TherapyType::all();
         $vocationalTypes = VocationalType::all();
@@ -225,8 +261,21 @@ class ChildController extends Controller
     {
         $query = Child::with(['therapyTypes', 'vocationalTypes']);
 
+        $term = trim((string) request('search'));
+        $isAmount = false;
+        $amount = null;
+
         if (request()->filled('search')) {
-            $query->where('name', 'like', '%' . request('search') . '%');
+            $digits = str_replace([',', '.', ' '], '', $term);
+            if (ctype_digit($digits) && $term !== '') {
+                $isAmount = true;
+                $amount = (int) $digits;
+            } else {
+                $query->where(function ($q) use ($term) {
+                    $q->where('name', 'like', '%' . $term . '%')
+                      ->orWhere('parent_name', 'like', '%' . $term . '%');
+                });
+            }
         }
         if (request()->filled('category')) {
             $query->whereHas('plans', function ($q) {
@@ -238,6 +287,11 @@ class ChildController extends Controller
         }
 
         $children = $query->get();
+        if ($isAmount && $amount !== null) {
+            $children = $children
+                ->filter(fn ($child) => (int) round($child->getCurrentInvoiceAmount()) === $amount)
+                ->values();
+        }
 
         $totalTerapi = 0;
         $totalVokasi = 0;
@@ -285,8 +339,21 @@ class ChildController extends Controller
     {
         $query = Child::with(['therapyTypes', 'vocationalTypes']);
 
+        $term = trim((string) request('search'));
+        $isAmount = false;
+        $amount = null;
+
         if (request()->filled('search')) {
-            $query->where('name', 'like', '%' . request('search') . '%');
+            $digits = str_replace([',', '.', ' '], '', $term);
+            if (ctype_digit($digits) && $term !== '') {
+                $isAmount = true;
+                $amount = (int) $digits;
+            } else {
+                $query->where(function ($q) use ($term) {
+                    $q->where('name', 'like', '%' . $term . '%')
+                      ->orWhere('parent_name', 'like', '%' . $term . '%');
+                });
+            }
         }
         if (request()->filled('category')) {
             $query->whereHas('plans', function ($q) {
@@ -298,6 +365,11 @@ class ChildController extends Controller
         }
 
         $children = $query->get();
+        if ($isAmount && $amount !== null) {
+            $children = $children
+                ->filter(fn ($child) => (int) round($child->getCurrentInvoiceAmount()) === $amount)
+                ->values();
+        }
 
         return Excel::download(new ChildExport($children), 'Laporan-Data-Anak-' . now()->format('Ymd-His') . '.xlsx');
     }

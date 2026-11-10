@@ -252,7 +252,41 @@
             </table>
         </div>
         @if($plans->hasPages())
-        <div class="relative z-10 px-4 py-3 border-t border-gray-200/50">{{ $plans->links() }}</div>
+        <div class="relative z-10 px-4 py-3 border-t border-gray-200/50">
+            <div class="flex items-center justify-between gap-2">
+                <p class="text-xs text-gray-400 shrink-0">
+                    Halaman {{ $plans->currentPage() }} dari {{ $plans->lastPage() }} — {{ $plans->total() }} data perencanaan
+                </p>
+                <nav class="flex items-center gap-1 shrink-0" aria-label="Pagination">
+                    {{-- Previous --}}
+                    @if ($plans->onFirstPage())
+                        <span class="px-2.5 py-1.5 rounded-lg text-xs text-gray-300 cursor-not-allowed opacity-50">Prev</span>
+                    @else
+                        <a href="{{ $plans->previousPageUrl() }}" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-white/60 hover:text-gray-900 transition-colors border border-gray-200">Prev</a>
+                    @endif
+
+                    {{-- Pages --}}
+                    @foreach ($plans->getUrlRange(1, $plans->lastPage()) as $page => $url)
+                        @if ($page == $plans->currentPage())
+                            <span class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-white"
+                                 style="background: linear-gradient(135deg, rgba(30,64,175,0.85) 0%, rgba(37,99,235,0.95) 100%);
+                                        box-shadow: 0 4px 12px rgba(37,99,235,0.3);">
+                                {{ $page }}
+                            </span>
+                        @else
+                            <a href="{{ $url }}" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-white/60 hover:text-gray-900 transition-colors border border-gray-200">{{ $page }}</a>
+                        @endif
+                    @endforeach
+
+                    {{-- Next --}}
+                    @if ($plans->hasMorePages())
+                        <a href="{{ $plans->nextPageUrl() }}" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-white/60 hover:text-gray-900 transition-colors border border-gray-200">Next</a>
+                    @else
+                        <span class="px-2.5 py-1.5 rounded-lg text-xs text-gray-300 cursor-not-allowed opacity-50">Next</span>
+                    @endif
+                </nav>
+            </div>
+        </div>
         @endif
     </div>
 </div>

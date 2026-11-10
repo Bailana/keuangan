@@ -80,7 +80,7 @@ class EmployeeController extends Controller
         ]);
 
         $employee->update($validated);
-        return redirect()->route('employees.index')->with('success', 'Data karyawan berhasil diperbarui.');
+        return redirect()->route('employees.index', request()->query())->with('success', 'Data karyawan berhasil diperbarui.');
     }
 
     public function toggleStatus(Employee $employee)

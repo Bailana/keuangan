@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <title>Laporan Laba / Rugi</title>
     <style>
-        body { font-family: sans-serif; font-size: 11pt; }
+        @page { margin: 0; }
+        body { font-family: sans-serif; font-size: 11pt; margin: 0; }
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { margin: 0; font-size: 16pt; }
         .header p { margin: 5px 0 0; color: #666; }

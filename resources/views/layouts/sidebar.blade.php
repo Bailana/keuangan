@@ -86,38 +86,18 @@
         <span x-show="!sidebarCollapsed" x-transition.opacity>Gaji Karyawan</span>
     </a>
 
-    <!-- Laporan Keuangan (Dropdown) -->
-    <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
-        <button @click="open = !open"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-                       text-slate-300/80 hover:bg-white/10 hover:text-white"
-                :class="sidebarCollapsed ? 'justify-center px-2' : ''"
-                :title="sidebarCollapsed ? 'Laporan Keuangan' : ''">
-            <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            </span>
-            <span x-show="!sidebarCollapsed" x-transition.opacity class="flex-1 text-left">Laporan Keuangan</span>
-            <svg x-show="!sidebarCollapsed" x-transition class="w-4 h-4 text-slate-400" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div x-show="!sidebarCollapsed && open" x-collapse x-transition>
-            <div class="ml-4 mt-1 space-y-1 border-l-2 border-white/10 pl-3">
-                <a href="{{ route('reports.profit-loss') }}"
-                   onclick="window.location.href='{{ route('reports.profit-loss') }}'; return false;"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
-                          {{ request()->routeIs('reports.profit-loss') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    Laba / Rugi
-                </a>
-                <a href="{{ route('reports.revenue') }}"
-                   onclick="window.location.href='{{ route('reports.revenue') }}'; return false;"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
-                          {{ request()->routeIs('reports.revenue') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                    Laporan Pendapatan
-                </a>
-            </div>
-        </div>
-    </div>
+    <!-- Laba / Rugi -->
+    <a href="{{ route('reports.profit-loss') }}"
+       onclick="window.location.href='{{ route('reports.profit-loss') }}'; return false;"
+       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
+              {{ request()->routeIs('reports.profit-loss') ? 'bg-white/15 text-white shadow-lg shadow-black/10' : 'text-slate-300/80 hover:bg-white/10 hover:text-white' }}"
+       :class="sidebarCollapsed ? 'justify-center px-2' : ''"
+       :title="sidebarCollapsed ? 'Laba / Rugi' : ''">
+        <span class="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        </span>
+        <span x-show="!sidebarCollapsed" x-transition.opacity>Laba / Rugi</span>
+    </a>
 
     <!-- Perencanaan -->
     <a href="{{ route('plans.index') }}"

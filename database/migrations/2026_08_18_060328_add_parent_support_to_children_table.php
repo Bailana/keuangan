@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('children', function (Blueprint $table) {
-            $table->boolean('has_parent_support')->default(false)->after('spp_fee');
+            if (!Schema::hasColumn('children', 'has_parent_support')) {
+                $table->boolean('has_parent_support')->default(false)->after('spp_fee');
+            }
         });
     }
 

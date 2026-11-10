@@ -137,9 +137,13 @@ class WalletController extends Controller
                 'incomes.date',
                 'incomes.amount',
                 'incomes.sender_name',
-                'income_categories.name as category_name'
+                'incomes.child_id',
+                'incomes.income_category_id',
+                'income_categories.name as category_name',
+                'children.name as child_name'
             )
             ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')
+            ->leftJoin('children', 'incomes.child_id', '=', 'children.id')
             ->where('incomes.wallet_id', $wallet->id)
             ->whereYear('incomes.date', $month->year)
             ->whereMonth('incomes.date', $month->month)
@@ -190,6 +194,7 @@ class WalletController extends Controller
                 'incomes.child_id',
                 'incomes.income_category_id',
                 'income_categories.name as category_name',
+                'children.name as child_name',
                 'children.has_subsidi'
             )
             ->join('income_categories', 'incomes.income_category_id', '=', 'income_categories.id')

@@ -184,9 +184,9 @@
         <div class="relative z-10">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Nama Anak</label>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Pencarian</label>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        placeholder="Cari nama anak..."
+                        placeholder="Cari nama anak, orang tua, atau nominal (mis. 1500000)"
                         class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/60">
                 </div>
                 <div class="w-[180px]">

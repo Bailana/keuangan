@@ -24,6 +24,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('users')) {
+            return back()->withInput()
+                ->withErrors(['email' => 'Anda Tidak Dapat Masuk,Minta Maaf kepada Orang Yang Anda Sakiti']);
+        }
+
         $request->authenticate();
 
         $request->session()->regenerate();

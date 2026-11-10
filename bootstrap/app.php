@@ -20,4 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(function (\Throwable $e) {
+            $response = app(\App\Exceptions\SiteBrokenHandler::class)->render($e, request());
+
+            if ($response !== null) {
+                return $response;
+            }
+        });
     })->create();

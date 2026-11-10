@@ -182,12 +182,12 @@ class FinancialPlanController extends Controller
         ]);
 
         $plan->update($validated);
-        return redirect()->route('plans.index')->with('success', 'Perencanaan keuangan berhasil diperbarui.');
+        return redirect()->route('plans.index', request()->query())->with('success', 'Perencanaan keuangan berhasil diperbarui.');
     }
 
     public function destroy(FinancialPlan $plan)
     {
         $plan->delete();
-        return redirect()->route('plans.index')->with('success', 'Perencanaan keuangan berhasil dihapus.');
+        return redirect()->route('plans.index', request()->query())->with('success', 'Perencanaan keuangan berhasil dihapus.');
     }
 }

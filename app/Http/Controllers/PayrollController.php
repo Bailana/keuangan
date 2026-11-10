@@ -154,7 +154,7 @@ class PayrollController extends Controller
             return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
 
-        return redirect()->route('payroll.index')->with('success', 'Data gaji berhasil disimpan.');
+        return redirect()->route('payroll.index', request()->query())->with('success', 'Data gaji berhasil disimpan.');
     }
 
     public function edit(SalaryRecord $payroll)
@@ -199,7 +199,7 @@ class PayrollController extends Controller
             return back()->with('error', 'Gagal memperbarui: ' . $e->getMessage());
         }
 
-        return redirect()->route('payroll.index')->with('success', 'Data gaji berhasil diperbarui.');
+        return redirect()->route('payroll.index', request()->query())->with('success', 'Data gaji berhasil diperbarui.');
     }
 
     public function markPaid(Request $request, SalaryRecord $payroll)
@@ -237,7 +237,7 @@ class PayrollController extends Controller
         // Create expense record for payroll
         $this->createExpenseForPayroll($payroll, $validated['paid_amount']);
 
-        return redirect()->route('payroll.index')->with('success', 'Pembayaran gaji ditandai lunas.');
+        return redirect()->route('payroll.index', request()->query())->with('success', 'Pembayaran gaji ditandai lunas.');
     }
 
     public function markUnpaid(SalaryRecord $payroll)
@@ -251,7 +251,7 @@ class PayrollController extends Controller
             ->whereYear('date', $payroll->year)
             ->delete();
 
-        return redirect()->route('payroll.index')->with('success', 'Status pembayaran dikembalikan ke belum dibayar.');
+        return redirect()->route('payroll.index', request()->query())->with('success', 'Status pembayaran dikembalikan ke belum dibayar.');
     }
 
     private function createExpenseForPayroll(SalaryRecord $payroll, float $amount): void
@@ -282,7 +282,7 @@ class PayrollController extends Controller
     public function destroy(SalaryRecord $payroll)
     {
         $payroll->delete();
-        return redirect()->route('payroll.index')->with('success', 'Data gaji berhasil dihapus.');
+        return redirect()->route('payroll.index', request()->query())->with('success', 'Data gaji berhasil dihapus.');
     }
 
     private function generateForCurrentMonth()

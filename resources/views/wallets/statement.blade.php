@@ -91,7 +91,7 @@
                             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900">{{ $r->sender_name ?? $r->category_name ?? 'Pemasukan' }}</p>
+                            <p class="text-sm font-medium text-gray-900">{{ $r->child_name ?? $r->sender_name ?? $r->category_name ?? 'Pemasukan' }}</p>
                             <p class="text-xs text-gray-500">{{ $r->category_name }} &middot; {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}</p>
                         </div>
                         <p class="text-sm font-semibold text-emerald-600 flex-shrink-0">+Rp {{ number_format($r->amount, 0, ',', '.') }}</p>
