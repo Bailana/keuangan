@@ -23,6 +23,7 @@
         <div class="relative z-10">
             <form action="{{ route('employees.update', $employee) }}" method="POST" class="space-y-6">
                 @csrf @method('PUT')
+                @if(request()->has('page'))<input type="hidden" name="page" value="{{ request('page') }}">@endif
 
                 <div>
                     <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Informasi Pribadi</h3>

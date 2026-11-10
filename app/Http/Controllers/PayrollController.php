@@ -86,6 +86,9 @@ class PayrollController extends Controller
         $generatedCount = session('payroll_generated', 0);
         session()->forget('payroll_generated');
 
+        // Store current query string so save/edit can redirect back to the same filtered+paginated view
+        session(['payroll_last_index_query' => $request->query()]);
+
         return view('payroll.index', compact('records', 'stats', 'months', 'perPage', 'generatedCount', 'currentMonth', 'currentYear'));
     }
 
@@ -154,7 +157,7 @@ class PayrollController extends Controller
             return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
 
-        return redirect()->route('payroll.index', request()->query())->with('success', 'Data gaji berhasil disimpan.');
+        return $this->redirectPayrollIndexWithFilters()->with('success', 'Data gaji berhasil disimpan.');
     }
 
     public function edit(SalaryRecord $payroll)
@@ -199,7 +202,7 @@ class PayrollController extends Controller
             return back()->with('error', 'Gagal memperbarui: ' . $e->getMessage());
         }
 
-        return redirect()->route('payroll.index', request()->query())->with('success', 'Data gaji berhasil diperbarui.');
+        return $this->redirectPayrollIndexWithFilters()->with('success', 'Data gaji berhasil diperbarui.');
     }
 
     public function markPaid(Request $request, SalaryRecord $payroll)
@@ -237,10 +240,10 @@ class PayrollController extends Controller
         // Create expense record for payroll
         $this->createExpenseForPayroll($payroll, $validated['paid_amount']);
 
-        return redirect()->route('payroll.index', request()->query())->with('success', 'Pembayaran gaji ditandai lunas.');
+        return $this->redirectPayrollIndexWithFilters()->with('success', 'Pembayaran gaji ditandai lunas.');
     }
 
-    public function markUnpaid(SalaryRecord $payroll)
+    public function markUnpaid(Request $request, SalaryRecord $payroll)
     {
         $payroll->update(['paid' => false, 'paid_at' => null]);
         SalaryPayment::where('salary_record_id', $payroll->id)->delete();
@@ -251,7 +254,22 @@ class PayrollController extends Controller
             ->whereYear('date', $payroll->year)
             ->delete();
 
-        return redirect()->route('payroll.index', request()->query())->with('success', 'Status pembayaran dikembalikan ke belum dibayar.');
+        return $this->redirectPayrollIndexWithFilters()->with('success', 'Status pembayaran dikembalikan ke belum dibayar.');
+    }
+
+    /**
+     * Redirect back to payroll index with the same filters + pagination as
+     * the user had when they left the index page (stored in session).
+     */
+    private function redirectPayrollIndexWithFilters()
+    {
+        $filters = session('payroll_last_index_query', []);
+
+        // Only keep the filter fields that the index form actually uses
+        $allowed = ['month', 'status', 'employee_name', 'per_page', 'page', 'year'];
+        $filters = array_intersect_key($filters, array_flip($allowed));
+
+        return redirect()->route('payroll.index', $filters);
     }
 
     private function createExpenseForPayroll(SalaryRecord $payroll, float $amount): void
@@ -279,10 +297,10 @@ class PayrollController extends Controller
         ]);
     }
 
-    public function destroy(SalaryRecord $payroll)
+    public function destroy(Request $request, SalaryRecord $payroll)
     {
         $payroll->delete();
-        return redirect()->route('payroll.index', request()->query())->with('success', 'Data gaji berhasil dihapus.');
+        return $this->redirectPayrollIndexWithFilters()->with('success', 'Data gaji berhasil dihapus.');
     }
 
     private function generateForCurrentMonth()

@@ -4,8 +4,7 @@
     <meta charset="utf-8">
     <title>Laporan Laba / Rugi</title>
     <style>
-        @page { margin: 0; }
-        body { font-family: sans-serif; font-size: 11pt; margin: 0; }
+        body { font-family: sans-serif; font-size: 11pt; }
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { margin: 0; font-size: 16pt; }
         .header p { margin: 5px 0 0; color: #666; }
@@ -90,11 +89,6 @@
                 </tr>
             </tbody>
         </table>
-    </div>
-
-    <div class="net-profit" style="color: {{ $netProfit >= 0 ? '#059669' : '#dc2626' }}">
-        <strong>LABA / RUGI BERSIH:</strong> Rp {{ number_format(abs($netProfit), 0, ',', '.') }}
-        <span style="font-size: 10pt; font-weight: normal;">({{ $netProfit >= 0 ? 'Laba' : 'Rugi' }} — Margin {{ number_format(abs($margin), 1) }}%)</span>
     </div>
 
     <div class="footer">

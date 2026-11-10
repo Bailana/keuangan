@@ -312,6 +312,9 @@
                     </button>
                     <form id="deleteForm" method="POST" class="flex-1">
                         @csrf @method('DELETE')
+                        @if($plans->currentPage() > 1)
+                        <input type="hidden" name="page" value="{{ $plans->currentPage() }}">
+                        @endif
                         <button type="submit"
                             class="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors">
                             Hapus
@@ -337,6 +340,9 @@
                 </div>
                 <form id="editForm" method="POST" class="space-y-5">
                     @csrf @method('PUT')
+                    @if($plans->currentPage() > 1)
+                    <input type="hidden" name="page" value="{{ $plans->currentPage() }}">
+                    @endif
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Judul Perencanaan</label>
                         <input type="text" name="title" id="editTitle"

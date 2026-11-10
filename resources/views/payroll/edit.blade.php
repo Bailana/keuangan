@@ -24,6 +24,7 @@
         <div class="relative z-10">
             <form action="{{ route('payroll.update', $payroll) }}" method="POST" class="space-y-6">
                 @csrf @method('PUT')
+                @if(request()->has('page'))<input type="hidden" name="page" value="{{ request('page') }}">@endif
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
